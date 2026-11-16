@@ -2,7 +2,8 @@
 
 A local PyTorch / Transformers / PEFT learning path targeting Windows, an RTX 3070 with 8 GB VRAM, and 16 GB RAM. No paid training, inference, reward, logging, or search API is required by the `local_rl` path.
 
-- [Windows quick start (Chinese)](docs/local/start.md)
+- [Complete Windows local tutorial (Chinese)](experiments/getting-started/readme.md)
+- [Start from your current setup](docs/local/start.md) / [Offline HTML](docs/local/getting-started.html)
 - [Code walkthrough (Chinese)](docs/local/walkthrough.md)
 - [Migration scope](docs/local/migration.md)
 - [Validation and limitations](docs/local/validation.md)

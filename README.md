@@ -6,7 +6,8 @@
 
 ## 从这里开始
 
-1. [Windows 安装与第一次训练](docs/local/start.md)
+1. [完整本地入门教程：ZIP、国内镜像、训练与评估](experiments/getting-started/readme.md)
+   · [按当前进度进入](docs/local/start.md) · [HTML 离线阅读版](docs/local/getting-started.html)
 2. [从采样到更新：按代码顺序理解 GRPO](docs/local/walkthrough.md)
 3. [算法、任务与原项目的对应关系](docs/local/migration.md)
 4. [验证记录与边界](docs/local/validation.md)

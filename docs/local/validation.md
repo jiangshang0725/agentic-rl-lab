@@ -62,3 +62,13 @@ python -m local_rl.train --device cpu --offline --steps 2 --group-size 4 --max-n
 - 本地教师不保证比学生强；工具调用不保证模型学会使用。
 - QLoRA、完整 DAPO 长度奖励、大型多模态、ALFWorld/TEMPO/AgentOPSD/Tournament 的全量迁移不在当前实现内。
 - 请对照[迁移表](migration.md)，不要把教学变体描述成完整论文复现。
+
+## 本地教程命令核对（2026-11-16）
+
+- `experiments/getting-started/readme.md` 已改为 17 节 Windows 本地课程；国内镜像、ZIP 解压与旧环境处理均单独说明。
+- 核对 24 条 Python CLI 命令，其中 13 条训练命令：参数解析、检查点来源和直接 GRPO 续训配置均通过检查。此项是静态核对，不表示执行过 Windows CUDA 命令。
+- 按教程参数重新执行 CPU toy 100 轮、摘要与两次独立评估（只将输出改到临时目录）：初始 2/20，训练后 11/20。
+- HTML 阅读版由 Markdown 生成，17 个内部目录锚点及源码相对链接通过检查；正文不依赖外部字体、脚本或样式。当前执行环境无法启动 Chromium，未宣称完成浏览器视觉验证。
+- 教程与阅读版未改变训练代码、核心依赖或锁文件。更新文档无需重建已安装好的本地版环境。
+
+当前续训限制：从 `--adapter` 热启动的实验，原 adapter 配置校验与 CLI 的 resume/adapter 互斥条件冲突，不能直接精确恢复。可加载最新 adapter 开始新实验，但优化器和随机状态重置。直接从基模开始的 GRPO 续训示例已核对，不受此限制。

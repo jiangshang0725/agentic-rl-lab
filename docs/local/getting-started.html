@@ -1,0 +1,1087 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Windows、RTX 3070 8GB 免费本地强化学习教程：国内镜像、CPU toy、Qwen LoRA、GRPO、SFT、评估与排错。">
+<title>本地训练入门 · Agentic RL Lab</title><style>
+:root{color-scheme:light;--ink:#182832;--muted:#596b75;--accent:#096a70;--line:#dce5e8}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}
+body{margin:0;background:#f4f7f8;color:var(--ink);font:16px/1.85 system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif}
+.shell{max-width:1280px;margin:auto;padding:32px 28px;display:grid;grid-template-columns:248px minmax(0,1fr);gap:40px}
+aside{position:sticky;top:28px;align-self:start;max-height:calc(100vh - 56px);overflow:auto;font-size:13px}
+.brand{font-weight:750;letter-spacing:.08em;color:var(--accent);margin:0 0 4px}
+.edition{font-size:12px;color:var(--muted);margin:0 0 20px}
+summary{font-weight:700;cursor:pointer}nav ol{list-style:none;margin:12px 0 0;padding:0}
+nav li{margin:0 0 5px}nav a{display:block;padding:4px 8px;border-radius:5px;text-decoration:none;color:var(--muted)}
+nav a:hover{background:#e0edef;color:var(--accent)}
+main{min-width:0;background:white;border:1px solid var(--line);padding:40px 46px;border-radius:10px}
+.tag{display:inline-block;color:var(--accent);background:#e6f3f1;font-size:12px;padding:3px 10px;border-radius:4px;letter-spacing:.06em}
+h1{font-size:32px;line-height:1.45;letter-spacing:-.03em;margin:18px 0 22px}
+h2{font-size:24px;line-height:1.5;border-top:1px solid var(--line);padding-top:28px;margin:42px 0 18px}
+h3{font-size:18px;margin:28px 0 12px}p{margin:14px 0}a{color:var(--accent);text-underline-offset:3px}
+strong{font-weight:700}li{margin:6px 0}code{font: .9em/1.7 Consolas,"Cascadia Code",monospace;background:#edf3f5;padding:2px 4px;border-radius:3px;overflow-wrap:anywhere}
+.code-wrap{position:relative;margin:18px 0}pre{margin:0;background:#142d38;color:#eef6f7;border-radius:7px;padding:42px 18px 18px;overflow:auto}
+pre code{display:block;background:none;color:inherit;padding:0;white-space:pre-wrap;overflow-wrap:anywhere;word-break:normal;font-size:13px}
+.copy{position:absolute;right:9px;top:8px;border:1px solid #6a838c;border-radius:4px;background:#203f4b;color:#eaf3f5;padding:3px 10px;cursor:pointer;font:12px/1.6 inherit}
+.copy:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #bf7846;outline-offset:2px}
+table{display:block;overflow:auto;border-collapse:collapse;width:100%;font-size:14px;margin:20px 0}
+th,td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top;min-width:100px}
+th{background:#edf4f5;font-weight:650}tr:nth-child(even){background:#f8fafb}td code{white-space:normal}
+footer{margin-top:38px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
+@media(max-width:900px){.shell{display:block;padding:18px 14px}aside{position:static;max-height:none;margin:0 0 20px}nav ol{columns:2}.edition{margin-bottom:8px}main{padding:26px 22px}h1{font-size:27px}}
+@media(max-width:560px){nav ol{columns:1}body{font-size:15px}main{padding:20px 16px}h1{font-size:25px}h2{font-size:21px}th,td{padding:8px}}
+@media print{body{background:white;font-size:10pt}.shell{display:block;padding:0}aside,.copy,.tag{display:none}main{border:0;padding:0}pre{background:#f1f4f6;color:#182832;padding:12px}h2,h3{break-after:avoid}tr{break-inside:avoid}a{color:inherit}table{font-size:9pt}}
+</style></head>
+<body><div class="shell"><aside><p class="brand">AGENTIC RL LAB</p><p class="edition">本地学习版 / 2026-11-16</p>
+<nav aria-label="教程目录"><details open><summary>学习目录 · 17 节</summary><ol><li><a href="#scope">1. 你的电脑能做什么</a></li>
+<li><a href="#project">2. 从已下载的 ZIP 准备项目</a></li>
+<li><a href="#environment">3. uv、Python 与旧环境</a></li>
+<li><a href="#mirrors">4. 国内镜像与依赖安装</a></li>
+<li><a href="#cuda">5. 检查 CUDA</a></li>
+<li><a href="#toy">6. 第一课：CPU toy</a></li>
+<li><a href="#model">7. 第二课：下载模型与 GPU 训练检查</a></li>
+<li><a href="#grpo">8. 第三课：真正运行 GRPO</a></li>
+<li><a href="#logs">9. 奖励、优势、损失与日志</a></li>
+<li><a href="#sft">10. 没有学习信号时先做 SFT</a></li>
+<li><a href="#evaluation">11. 独立评估</a></li>
+<li><a href="#checkpoints">12. 保存、续训与加载适配器</a></li>
+<li><a href="#extensions">13. 其他算法、工具任务与 OPD</a></li>
+<li><a href="#data">14. 自定义数据与 GSM8K</a></li>
+<li><a href="#troubleshooting">15. 故障排查与 8GB 显存调整</a></li>
+<li><a href="#learning">16. 读代码、练习与完成标准</a></li>
+<li><a href="#reference">17. 命令速查与参考资料</a></li></ol></details></nav></aside>
+<main><span class="tag">WINDOWS · RTX 3070 8GB · 无付费 API</span><h1>本地训练入门：从 Windows 环境到第一次 GRPO 更新</h1>
+<p>适用设备：<strong>RTX 3070 8GB 显存、16GB 内存、Windows PowerShell</strong>。代码分支：<code>feat/local-training-8gb</code>。本文对应本地版 <code>local_rl/</code>，更新于 2026-11-16。</p>
+<p>本章替代原来的“注册 PyTRIO / SwanLab，再调用云端训练”入门流程。你将亲自运行采样、奖励计算、反向传播、参数更新和评估，<strong>不需要付费 API、云 GPU、PyTRIO 账号或 SwanLab 账号</strong>。依赖和公开模型首次需要下载；准备齐全后，内置任务可以离线训练。</p>
+<p>本项目基于 <a href="https://github.com/datawhalechina/agentic-rl-lab">Datawhale Agentic RL Lab</a> 改造，保留上游署名与许可证。<a href="https://github.com/jiangshang0725/agentic-rl-lab/blob/feat/local-training-8gb/remote/getting-started-upstream.md">原远程入门教程存档</a>仅供对照；其他历史章节尚未全部迁移。不要混用原网页中的安装和训练命令。</p>
+<p>如果已经解压并装好环境，直接从“检查 CUDA”开始。如果只想先理解算法，完成 CPU toy 实验就能学习完整的策略更新过程。</p>
+<p><a id="scope"></a></p>
+<h2>1. 你的电脑能做什么</h2>
+<p><strong>适合学习本地强化学习训练流程。</strong> 起点是随机初始化的微型策略网络，以及已经预训练好的 <code>Qwen/Qwen2.5-0.5B-Instruct</code> 加 LoRA。8GB 显存不适合把原项目的大模型、长上下文、多模型同时驻留配置直接搬过来。</p>
+<table>
+<thead>
+<tr>
+<th>学习目标</th>
+<th>本地实现</th>
+<th>定位</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>观察采样、奖励、优势与参数更新</td>
+<td>CPU toy，1,994 个参数</td>
+<td>第一课，不需要下载模型</td>
+</tr>
+<tr>
+<td>对真实语言模型做 SFT / GRPO</td>
+<td>Qwen2.5-0.5B + LoRA rank 8</td>
+<td>8GB GPU 起步配置，使用短回答</td>
+</tr>
+<tr>
+<td>理解 Agent 与工具交互</td>
+<td>本地计算器、合成记录检索</td>
+<td>短轨迹，最多两轮起步</td>
+</tr>
+<tr>
+<td>从零预训练大语言模型</td>
+<td>当前没有提供</td>
+<td>不作为这台机器的学习目标</td>
+</tr>
+<tr>
+<td>完整复现上游全部研究实验</td>
+<td>当前没有提供</td>
+<td>具体范围见<a href="https://github.com/jiangshang0725/agentic-rl-lab/blob/feat/local-training-8gb/docs/local/migration.md">迁移表</a></td>
+</tr>
+</tbody>
+</table>
+<p>“本地微调”是加载已有模型，只更新 LoRA 参数；toy 才是从随机参数开始训练。LoRA 减少可训练参数与优化器状态，但基础模型、生成缓存和中间激活仍占显存。</p>
+<p>目前已完成 Linux 实际小模型训练检查，以及 Windows / Linux CPU 自动化检查。<strong>尚未在你的 3070 上实测峰值显存和速度</strong>，因此先做诊断和两轮 SFT，不承诺固定训练时间。16GB 内存下先只运行一个训练进程；磁盘建议预留约 10–15GB 或更多给环境、模型缓存和日志，这不是显存测量值。</p>
+<table>
+<thead>
+<tr>
+<th>组件</th>
+<th>运行位置</th>
+<th>负责什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>uv</td>
+<td>本机</td>
+<td>安装 Python、创建环境、安装依赖</td>
+</tr>
+<tr>
+<td>PyTorch</td>
+<td>本机 CPU / GPU</td>
+<td>张量、自动求导和优化器更新</td>
+</tr>
+<tr>
+<td>Transformers</td>
+<td>本机</td>
+<td>加载模型、分词、生成回答</td>
+</tr>
+<tr>
+<td>PEFT</td>
+<td>本机</td>
+<td>添加和保存 LoRA 适配器</td>
+</tr>
+<tr>
+<td><code>local_rl</code></td>
+<td>本机</td>
+<td>数据、奖励、训练循环、评估与日志</td>
+</tr>
+<tr>
+<td>模型下载站</td>
+<td>初次准备时联网</td>
+<td>提供公开权重文件，不参与后续训练计算</td>
+</tr>
+</tbody>
+</table>
+<p><a id="project"></a></p>
+<h2>2. 从已下载的 ZIP 准备项目</h2>
+<p>按你的实际路径操作：</p>
+<table>
+<thead>
+<tr>
+<th>路径</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>E:\Agentic_RL\agentic-rl-lab-feat-local-training-8gb.zip</code></td>
+<td>已下载的本地版源码</td>
+</tr>
+<tr>
+<td><code>E:\Agentic_RL\agentic-rl-lab</code></td>
+<td>接下来运行的项目</td>
+</tr>
+<tr>
+<td><code>E:\Agentic_RL\agentic-rl-lab-original-backup</code></td>
+<td>旧版备份，保留即可</td>
+</tr>
+</tbody>
+</table>
+<p><strong>已经解压成功就跳过解压命令</strong>，只运行本节末尾的目录检查。这个 ZIP 已包含目标分支的代码，不必再 <code>git clone</code> 或切换分支。</p>
+<p>尚未解压时，可用资源管理器解压，把包含 <code>pyproject.toml</code> 和 <code>local_rl</code> 的那一级文件夹改名为 <code>agentic-rl-lab</code>。也可在 PowerShell 运行下面整块；目标目录已存在时会停止，避免覆盖文件：</p>
+<pre><code class="language-powershell">Set-Location &quot;E:\Agentic_RL&quot;
+$ErrorActionPreference = &quot;Stop&quot;
+if (Test-Path &quot;.\agentic-rl-lab&quot;) {
+    throw &quot;目标目录已存在。若已是本地版，直接进入；否则先给旧目录另起备份名。&quot;
+}
+$unpackDir = Join-Path (Get-Location) (&quot;unpack-&quot; + [guid]::NewGuid().ToString(&quot;N&quot;))
+Expand-Archive -LiteralPath &quot;.\agentic-rl-lab-feat-local-training-8gb.zip&quot; -DestinationPath $unpackDir
+$sourceDir = Join-Path $unpackDir &quot;agentic-rl-lab-feat-local-training-8gb&quot;
+if (-not (Test-Path (Join-Path $sourceDir &quot;local_rl\train.py&quot;))) {
+    throw &quot;未找到本地训练代码，请检查压缩包内的根目录名称和分支。&quot;
+}
+Move-Item -LiteralPath $sourceDir -Destination &quot;.\agentic-rl-lab&quot;
+Set-Location &quot;.\agentic-rl-lab&quot;
+</code></pre>
+<p>检查实际工作目录：</p>
+<pre><code class="language-powershell">Set-Location &quot;E:\Agentic_RL\agentic-rl-lab&quot;
+Test-Path &quot;.\pyproject.toml&quot;
+Test-Path &quot;.\local_rl\train.py&quot;
+</code></pre>
+<p>两行都应输出 <code>True</code>。后文都在这个目录执行，不是在 <code>E:\Agentic_RL</code> 或备份目录。</p>
+<p>ZIP 解压目录没有 Git 历史，不能直接 <code>git pull</code>。以后更新可重新下载分支 ZIP 解压到另一个目录，或只替换明确修改的源码 / 文档。保留自己的输出、模型和镜像配置，不要搬移 <code>.venv</code>。<strong>本次教程更新不改变训练代码或依赖，已有本地版环境无需为此重装。</strong></p>
+<p><a id="environment"></a></p>
+<h2>3. uv、Python 与旧环境</h2>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>是什么</th>
+<th>现在怎么处理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>uv</code></td>
+<td>安装与管理工具</td>
+<td>已安装过，通常继续用</td>
+</tr>
+<tr>
+<td>Python 3.12</td>
+<td>解释器</td>
+<td>本教程统一使用这一版本</td>
+</tr>
+<tr>
+<td>项目的 <code>.venv</code></td>
+<td>此目录专属的解释器入口和依赖</td>
+<td>在新项目内由 <code>uv sync</code> 创建</td>
+</tr>
+<tr>
+<td>uv 缓存</td>
+<td>可复用的安装包缓存</td>
+<td>保留，避免重复下载</td>
+</tr>
+</tbody>
+</table>
+<p>备份中的旧 <code>.venv</code> 不需要删除，也不建议复制到新目录。它可能记录旧路径，并包含上游 CPU Torch / 远程 SDK。<strong>新建环境不等于重新下载所有已缓存的包。</strong></p>
+<p>打开新的 PowerShell，进入项目目录，检查：</p>
+<pre><code class="language-powershell">uv --version
+</code></pre>
+<p>本地版安装验证使用 uv <code>0.13.6</code>。现有版本能正常读取锁文件就继续用；提示锁文件版本不支持时先更新 uv，不要删除锁文件来绕过问题。</p>
+<p>尚未安装 uv 时，参照 <a href="https://docs.astral.sh/uv/getting-started/installation/">uv 官方安装说明</a>。已有系统 Python 和 <code>py</code> 启动器时，也可通过清华源安装验证过的版本：</p>
+<pre><code class="language-powershell">py -m pip install --user uv==0.13.6 --index-url https://pypi.tuna.tsinghua.edu.cn/simple
+</code></pre>
+<p>安装后重开终端，确认 <code>uv --version</code> 可用。没有 <code>py</code> 时使用官方安装方式，不必反复执行这条命令。</p>
+<p>后文直接调用 <code>.\.venv\Scripts\python.exe</code>，<strong>无需激活环境或修改 PowerShell 执行策略</strong>。各块命令按顺序执行，出现错误先处理；<code>$ErrorActionPreference</code> 不保证外部程序失败后自动停止，安装步骤会另行检查退出码。</p>
+<p><a id="mirrors"></a></p>
+<h2>4. 国内镜像与依赖安装</h2>
+<h3>4.1 设置今后 uv 的默认镜像</h3>
+<p>在 PowerShell 执行一次：</p>
+<pre><code class="language-powershell">$env:UV_DEFAULT_INDEX = &quot;https://pypi.tuna.tsinghua.edu.cn/simple&quot;
+[Environment]::SetEnvironmentVariable(&quot;UV_DEFAULT_INDEX&quot;, $env:UV_DEFAULT_INDEX, &quot;User&quot;)
+
+$env:UV_PYTHON_INSTALL_MIRROR = &quot;https://mirrors.ustc.edu.cn/github-release/astral-sh/python-build-standalone/&quot;
+[Environment]::SetEnvironmentVariable(&quot;UV_PYTHON_INSTALL_MIRROR&quot;, $env:UV_PYTHON_INSTALL_MIRROR, &quot;User&quot;)
+</code></pre>
+<p><code>$env:...</code> 立即作用于当前窗口；<code>User</code> 配置让以后启动的终端继承。其他已打开的终端、VS Code 可能需要重启。</p>
+<table>
+<thead>
+<tr>
+<th>配置</th>
+<th>负责下载什么</th>
+<th>不会自动处理什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>UV_DEFAULT_INDEX</code></td>
+<td>普通 Python 包</td>
+<td>项目专用 Torch 索引、模型、Git 仓库</td>
+</tr>
+<tr>
+<td><code>UV_PYTHON_INSTALL_MIRROR</code></td>
+<td>uv 管理的 CPython 解释器</td>
+<td>Python 包、CUDA 驱动、模型</td>
+</tr>
+<tr>
+<td>下一步的 PyTorch 索引</td>
+<td>指定 CPU / CUDA Torch 轮子</td>
+<td>其他项目的自定义源</td>
+</tr>
+</tbody>
+</table>
+<p>这是默认镜像，不是强制所有网络请求都经过国内地址。专用索引、直接 URL、已有锁文件需分别处理；中科大 Release 镜像未收录的文件可能回源。</p>
+<h3>4.2 替换本项目的 PyTorch 专用源</h3>
+<p>项目将 CPU / CUDA 12.4 Torch 分别绑定到专用索引。下面只换地址，保留版本和 extra 对应关系：</p>
+<pre><code class="language-powershell">Set-Location &quot;E:\Agentic_RL\agentic-rl-lab&quot;
+$uvProjectPath = Join-Path (Get-Location) &quot;pyproject.toml&quot;
+$uvProjectText = [System.IO.File]::ReadAllText($uvProjectPath)
+$uvProjectText = $uvProjectText.Replace(&quot;https://download.pytorch.org/whl/&quot;, &quot;https://mirrors.nju.edu.cn/pytorch/whl/&quot;)
+[System.IO.File]::WriteAllText($uvProjectPath, $uvProjectText, [System.Text.UTF8Encoding]::new($false))
+Select-String -Path &quot;.\pyproject.toml&quot; -Pattern &quot;mirrors.nju.edu.cn&quot;
+</code></pre>
+<p>最后应看到 <code>cpu</code> 和 <code>cu124</code> 两个南京大学镜像地址。重复执行替换不会重复修改内容。</p>
+<h3>4.3 更新锁文件来源，再安装 CUDA 依赖</h3>
+<pre><code class="language-powershell">uv lock --refresh --python 3.12
+if ($LASTEXITCODE -ne 0) { throw &quot;更新锁文件失败，请先检查上方错误。&quot; }
+
+uv sync --python 3.12 --extra cuda --frozen
+if ($LASTEXITCODE -ne 0) { throw &quot;依赖安装失败，请先检查上方错误。&quot; }
+</code></pre>
+<p>第一条重新解析镜像来源，不能加 <code>--frozen</code>；第二条按新锁文件创建 <code>.venv</code> 并安装。没有使用 <code>--upgrade</code>，不要为了换源随意升级核心依赖。</p>
+<p>锁文件保存了具体下载地址。只设环境变量，再对旧锁文件直接 <code>--frozen</code>，仍可能访问原地址。检查来源：</p>
+<pre><code class="language-powershell">Select-String -Path &quot;.\uv.lock&quot; -Pattern '^source = '
+</code></pre>
+<p>应能看到清华与南京大学地址。已有缓存可复用，不必清空缓存。</p>
+<p>你有 3070，正常选择 <code>cuda</code>。暂时只用 CPU 可将安装命令的 <code>cuda</code> 改为 <code>cpu</code>；之后用 GPU 再同步一次 <code>cuda</code>。<strong>两个 extra 互斥，不要一起装。</strong> CUDA 版 Torch 也能运行 CPU toy。</p>
+<p>核心组合锁定为 Torch 2.6.0、Transformers 4.51.3、PEFT 0.15.2、Accelerate 1.6.0。预编译的 CUDA 12.4 轮子不要求完整 CUDA Toolkit，但需要兼容 NVIDIA 驱动。</p>
+<p><a id="cuda"></a></p>
+<h2>5. 检查 CUDA</h2>
+<pre><code class="language-powershell">nvidia-smi
+.\.venv\Scripts\python.exe -m local_rl.doctor
+</code></pre>
+<p>核对诊断 JSON，以下是<strong>成功标志，不是你的机器已经测出的结果</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>应观察什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>python</code></td>
+<td><code>3.12.x</code></td>
+</tr>
+<tr>
+<td><code>packages.torch</code></td>
+<td>CUDA 构建，通常带 <code>+cu124</code></td>
+</tr>
+<tr>
+<td><code>torch_cuda_runtime</code></td>
+<td><code>12.4</code>，而非 <code>null</code></td>
+</tr>
+<tr>
+<td><code>cuda_available</code></td>
+<td><code>true</code></td>
+</tr>
+<tr>
+<td><code>gpu</code></td>
+<td>你的 RTX 3070</td>
+</tr>
+<tr>
+<td><code>cuda_backward</code></td>
+<td><code>true</code>，微型 GPU 反向传播通过</td>
+</tr>
+<tr>
+<td><code>gpu_free_gib</code></td>
+<td>当前空闲显存，通常小于标称 8GB</td>
+</tr>
+</tbody>
+</table>
+<p><code>datasets</code> 未安装是正常的，内置任务不需要它。<code>nvidia-smi</code> 的 CUDA Version 表示驱动支持能力，不要求与 Torch 的 <code>12.4</code> 字符串完全相同。</p>
+<p>CUDA 不可用时先做 CPU toy，再按第 15 节排查。诊断成功仅证明基本 CUDA 运算可用，实际模型训练还要单独检查。</p>
+<p><a id="toy"></a></p>
+<h2>6. 第一课：CPU toy</h2>
+<p>任务：输入两个 0–9 的整数，从 0–9 中选出最大值。例如 <code>(2,7)</code> 选 <code>7</code> 得 1 分，其他答案得 0 分。随机初始化的 1,994 参数小网络学习这个单步决策，不涉及语言建模或 LoRA。</p>
+<h3>6.1 训练与查看摘要</h3>
+<pre><code class="language-powershell">.\.venv\Scripts\python.exe -m local_rl.train --backend toy --task toy --device cpu --steps 100 --batch-size 4 --group-size 8 --learning-rate 0.01 --save-every 100 --output outputs/toy-01
+.\.venv\Scripts\python.exe -m local_rl.analyze outputs/toy-01
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--backend toy --task toy</code></td>
+<td>小网络与最大值任务</td>
+</tr>
+<tr>
+<td><code>--device cpu</code></td>
+<td>在 CPU 执行真实训练</td>
+</tr>
+<tr>
+<td><code>--steps 100</code></td>
+<td>100 轮采样，不保证有 100 次优化器更新</td>
+</tr>
+<tr>
+<td><code>--batch-size 4</code></td>
+<td>每轮抽取 4 个题目组，题目可能重复</td>
+</tr>
+<tr>
+<td><code>--group-size 8</code></td>
+<td>每道题采样 8 个答案</td>
+</tr>
+<tr>
+<td><code>--learning-rate 0.01</code></td>
+<td>小网络学习率，不直接照搬给 Qwen</td>
+</tr>
+<tr>
+<td><code>--save-every 100</code></td>
+<td>第 100 轮保存</td>
+</tr>
+<tr>
+<td><code>--output outputs/toy-01</code></td>
+<td>独立输出目录</td>
+</tr>
+</tbody>
+</table>
+<p>结束时应打印 <code>Saved checkpoint: ...checkpoint-000100</code>。没有组内奖励差异的轮次可以没有优化更新。</p>
+<h3>6.2 比较初始与训练后策略</h3>
+<pre><code class="language-powershell">.\.venv\Scripts\python.exe -m local_rl.evaluate --checkpoint outputs/toy-01/checkpoint-000100 --base --limit 20 --output outputs/toy-01/base-eval.json
+.\.venv\Scripts\python.exe -m local_rl.evaluate --checkpoint outputs/toy-01/checkpoint-000100 --limit 20 --output outputs/toy-01/trained-eval.json
+</code></pre>
+<p>toy 的 <code>--base</code> 按训练 seed 重建初始网络；两次都用独立 20 题，选择概率最大的动作。</p>
+<p>固定 seed 验证曾得到初始 <code>2/20</code>、训练后 <code>11/20</code>。这是一次小任务观察，不是你必须达到的分数，也不是语言模型能力证据。</p>
+<p><strong>完成标志：</strong> 有训练日志、检查点、实际优化次数和两份独立评估 JSON。</p>
+<p><a id="model"></a></p>
+<h2>7. 第二课：下载模型与 GPU 训练检查</h2>
+<h3>7.1 下载与训练是两件事</h3>
+<p>默认模型 <code>Qwen/Qwen2.5-0.5B-Instruct</code> 的公开权重可以匿名下载，不需要购买在线推理或训练服务。为区分网络故障与训练故障，先单独下载到 Hugging Face 缓存：</p>
+<pre><code class="language-powershell">.\.venv\Scripts\python.exe -c &quot;from huggingface_hub import snapshot_download; print(snapshot_download('Qwen/Qwen2.5-0.5B-Instruct', max_workers=2))&quot;
+</code></pre>
+<p>成功后会打印本地 snapshot 目录。缓存通常在用户目录下，请保留；LoRA 检查点不会另外打包整个基础模型。</p>
+<p>PyPI 镜像不负责模型下载。若 <code>huggingface.co</code> 连接失败，可选用 <a href="https://hf-mirror.com/">HF-Mirror</a> 的第三方下载镜像，在<strong>当前 PowerShell</strong>设置后重试上面的命令：</p>
+<pre><code class="language-powershell">$env:HF_ENDPOINT = &quot;https://hf-mirror.com&quot;
+$env:HF_HUB_DISABLE_IMPLICIT_TOKEN = &quot;1&quot;
+$env:HF_HUB_DISABLE_XET = &quot;1&quot;
+</code></pre>
+<p>它不是 Hugging Face 官方站点，本教程仅下载公开文件，不传账号 token。镜像也可能临时不可用。恢复默认端点可执行 <code>Remove-Item Env:HF_ENDPOINT -ErrorAction SilentlyContinue</code>。完整缓存后，训练加 <code>--offline</code>。</p>
+<p>也可以把完整模型放到自选目录，使用 <code>--model "E:/Models/Qwen2.5-0.5B-Instruct" --offline</code>。目录要有配置、tokenizer 和真实权重；只有一个权重文件或 Git LFS 指针不够。<strong>改用自定义路径后，后续训练、加载适配器和续训都保持同一个 <code>--model</code> 值。</strong> 下文统一采用默认模型名和缓存。</p>
+<h3>7.2 两轮 SFT：验证真实 GPU 反向传播</h3>
+<pre><code class="language-powershell">.\.venv\Scripts\python.exe -m local_rl.train --device cuda --objective sft --offline --steps 2 --max-new-tokens 64 --save-every 2 --output outputs/gpu-check-01
+</code></pre>
+<p>SFT 直接使用本地算术标准答案，检查前向、反向、优化与保存；不依赖随机回答是否有对有错。核对 <code>optimizer_updates</code> 增加、<code>grad_norm</code> 有限且有学习信号，并生成 <code>checkpoint-000002/manifest.json</code>。</p>
+<p>这是运行检查，不证明两轮就让模型变强。当前 Qwen + rank 8 配置在验证中有 540,672 个可训练参数。CUDA 自动选设备支持的 BF16，否则 FP16 + 梯度缩放；CPU 用 FP32。梯度检查点默认开启，无需另装 FlashAttention、DeepSpeed 或 vLLM。</p>
+<p><a id="grpo"></a></p>
+<h2>8. 第三课：真正运行 GRPO</h2>
+<h3>8.1 从本地算术题开始</h3>
+<pre><code class="language-powershell">.\.venv\Scripts\python.exe -m local_rl.train --device cuda --offline --steps 20 --batch-size 1 --group-size 4 --max-new-tokens 96 --output outputs/qwen-grpo-01
+</code></pre>
+<p>默认 <code>--backend hf --task arithmetic --objective grpo</code>：真实 Qwen、内置加法题、GRPO。第 7 节的 SFT 检查点<strong>不会自动加载</strong>；这里从原始 Qwen 加新 LoRA 开始。</p>
+<table>
+<thead>
+<tr>
+<th>参数 / 默认值</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--samples 64</code></td>
+<td>从固定训练分区取前 64 题作为采样池</td>
+</tr>
+<tr>
+<td><code>--batch-size 1</code></td>
+<td>一轮收集一个题目组</td>
+</tr>
+<tr>
+<td><code>--group-size 4</code></td>
+<td>同题生成四个候选回答</td>
+</tr>
+<tr>
+<td><code>--max-new-tokens 96</code></td>
+<td>一条轨迹的总动作 token 预算，含 EOS；工具多轮共享</td>
+</tr>
+<tr>
+<td><code>--max-prompt-tokens 256</code></td>
+<td>初始题目上下文上限</td>
+</tr>
+<tr>
+<td><code>--max-seq-len 512</code></td>
+<td>上下文与动作总长度上限</td>
+</tr>
+<tr>
+<td><code>--learning-rate 2e-5</code></td>
+<td>LoRA 学习率</td>
+</tr>
+<tr>
+<td><code>--lora-rank 8</code></td>
+<td>适配器秩</td>
+</tr>
+<tr>
+<td><code>--updates-per-batch 1</code></td>
+<td>每次采样数据做一次更新</td>
+</tr>
+<tr>
+<td><code>--beta 0</code></td>
+<td>默认不加对基模的 KL 约束</td>
+</tr>
+<tr>
+<td><code>--seed 42</code></td>
+<td>训练抽题、初始化和采样随机性</td>
+</tr>
+</tbody>
+</table>
+<p>题库是两个 0–19 整数相加，不下载 GSM8K。400 道题固定划为 320 训练题与 80 评估题；<code>--samples 64</code> 只缩小训练池，不改变评估集。</p>
+<h3>8.2 一轮发生了什么</h3>
+<ol>
+<li>从训练池随机抽题，用当前策略生成四个回答。</li>
+<li>本地规则给每个回答打 0 或 1 分。</li>
+<li>比较组内奖励，计算优势。</li>
+<li>保存旧策略对已采样 token 的 log probability，再前向计算可求导的新概率。</li>
+<li>算策略损失，逐条 backward，更新 LoRA。</li>
+<li>写日志，按间隔保存检查点。</li>
+</ol>
+<p>生成和反向传播逐条执行，避免同时保留整批生成缓存或计算图；没有同时加载四份模型，也没有远程求导。</p>
+<p><strong>完成标志：</strong> 保存 <code>checkpoint-000020</code>，能区分“20 轮采样”和“多少次有效更新”。零更新时先检查奖励与文本，不能把它当成已学会任务。</p>
+<p><a id="logs"></a></p>
+<h2>9. 奖励、优势、损失与日志</h2>
+<h3>9.1 奖励完全在本地计算</h3>
+<p>对语言模型，最终答案须有 <code>\boxed{数字}</code>。程序读取最后一个框，解析数值，与标准答案比较。</p>
+<table>
+<thead>
+<tr>
+<th>标准答案为 7 时的文本</th>
+<th>奖励</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>The answer is \boxed{7}.</code></td>
+<td>1</td>
+<td>格式与数值正确</td>
+</tr>
+<tr>
+<td><code>\boxed{7.0}</code></td>
+<td>1</td>
+<td>数值等价</td>
+</tr>
+<tr>
+<td><code>The answer is 7.</code></td>
+<td>0</td>
+<td>没有要求的答案框</td>
+</tr>
+<tr>
+<td><code>\boxed{8}</code></td>
+<td>0</td>
+<td>数值错误</td>
+</tr>
+<tr>
+<td><code>\boxed{3+4}</code></td>
+<td>0</td>
+<td>最终答案不接受表达式</td>
+</tr>
+</tbody>
+</table>
+<p>不使用付费裁判模型。开放式文章和主观解释不能直接用这个数值奖励。</p>
+<h3>9.2 手算组内优势</h3>
+<p>奖励 <code>[0,0,1,1]</code> 的均值为 <code>0.5</code>、总体标准差为 <code>0.5</code>：</p>
+<pre><code class="language-text">advantage = (reward - 组内均值) / max(组内总体标准差, 0.000001)
+          = [-1, -1, +1, +1]
+</code></pre>
+<p>正优势倾向提高该回答动作的概率，负优势倾向降低。全错 <code>[0,0,0,0]</code> 或全对 <code>[1,1,1,1]</code> 的优势都为零，没有组内相对信号。</p>
+<p>默认 <code>beta=0</code> 时，整轮没有有效组就跳过优化器更新。<code>--no-normalize-advantages</code> 可以只减均值，不除标准差；理解默认行为后再对照。</p>
+<h3>9.3 打开输出文件</h3>
+<table>
+<thead>
+<tr>
+<th>文件 / 目录</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>config.json</code></td>
+<td>本次实际参数</td>
+</tr>
+<tr>
+<td><code>metrics.jsonl</code></td>
+<td>每行一轮指标</td>
+</tr>
+<tr>
+<td><code>rollouts.jsonl</code></td>
+<td>题目、参考答案、生成文本、奖励、优势与工具观察</td>
+</tr>
+<tr>
+<td><code>checkpoint-000010/</code></td>
+<td>第 10 轮检查点</td>
+</tr>
+<tr>
+<td><code>checkpoint-000020/</code></td>
+<td>第 20 轮检查点</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-powershell">.\.venv\Scripts\python.exe -m local_rl.analyze outputs/qwen-grpo-01
+Get-Content -Encoding UTF8 &quot;.\outputs\qwen-grpo-01\rollouts.jsonl&quot; -TotalCount 4
+Get-Content -Encoding UTF8 &quot;.\outputs\qwen-grpo-01\metrics.jsonl&quot; -Tail 3
+</code></pre>
+<p>JSONL 每行是一个 JSON 对象。默认 batch=1、group=4 时，前四条是第一组候选。JSON 字符串会转义反斜杠，<code>\\boxed</code> 表示实际文本中的 <code>\boxed</code>。</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>正确理解</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>step</code></td>
+<td>采样轮次</td>
+</tr>
+<tr>
+<td><code>optimizer_updates</code></td>
+<td>累计优化器更新次数</td>
+</tr>
+<tr>
+<td><code>reward</code></td>
+<td>本轮尝试候选的平均奖励，不是独立评估分数</td>
+</tr>
+<tr>
+<td><code>active_groups</code></td>
+<td>策略梯度任务中有非零优势的组数；SFT / OPD 中是处理的组数</td>
+</tr>
+<tr>
+<td><code>attempted_groups</code></td>
+<td>尝试组数，DAPO 可能重采样</td>
+</tr>
+<tr>
+<td><code>loss</code></td>
+<td>优化目标数值，不等同于错误率</td>
+</tr>
+<tr>
+<td><code>grad_norm</code></td>
+<td>裁剪前梯度范数；实际更新前裁剪到 1</td>
+</tr>
+<tr>
+<td><code>mean_tokens</code></td>
+<td>平均生成动作 token 数</td>
+</tr>
+<tr>
+<td><code>truncated_fraction</code></td>
+<td>程序标记为未正常结束的比例，结合文本与长度预算判断</td>
+</tr>
+<tr>
+<td><code>seconds</code></td>
+<td>本轮采样与计算耗时，不含初始下载 / 加载及随后保存检查点</td>
+</tr>
+<tr>
+<td><code>peak_allocated_mib</code></td>
+<td>本轮 PyTorch 活跃分配的显存峰值</td>
+</tr>
+<tr>
+<td><code>peak_reserved_mib</code></td>
+<td>本轮 PyTorch 内存池保留的显存峰值</td>
+</tr>
+</tbody>
+</table>
+<p>显存值不是整块显卡所有进程占用，另用 <code>nvidia-smi</code> 检查其他进程。CPU 显存指标为 0。轮耗时之和也不是含下载、加载和保存的总墙钟时间。</p>
+<p><strong>loss 为 0 为什么也可能在训练？</strong> 首次更新前，新旧概率比为 1，优势均值为 0，正负项数值可能抵消；不同回答的梯度通常不抵消。一起看梯度、更新次数和独立评估。</p>
+<h3>9.4 可选画本地曲线</h3>
+<pre><code class="language-powershell">uv sync --python 3.12 --extra cuda --extra plots --frozen
+if ($LASTEXITCODE -ne 0) { throw &quot;绘图依赖安装失败。&quot; }
+.\.venv\Scripts\python.exe -m local_rl.analyze outputs/qwen-grpo-01 --plot
+</code></pre>
+<p>图在 <code>outputs/qwen-grpo-01/learning.png</code>，无需 SwanLab。以后同步依赖时保留所需 extra；只同步 <code>cuda</code> 可能移除先前可选的绘图依赖。</p>
+<p><a id="sft"></a></p>
+<h2>10. 没有学习信号时先做 SFT</h2>
+<p>小模型可能会加法，却不遵守答案格式，或在 96 tokens 内没给最终答案。经常全零奖励时先读 rollout，再决定是否 SFT。</p>
+<p>SFT（监督微调）直接展示“题目 → 标准回答”，优化回答 token 的交叉熵；参考答案来自本地算术程序，不购买教师调用。</p>
+<pre><code class="language-powershell">.\.venv\Scripts\python.exe -m local_rl.train --device cuda --offline --objective sft --steps 30 --output outputs/qwen-sft-01
+</code></pre>
+<p>明确加载 SFT 适配器，开始新的 GRPO 实验：</p>
+<pre><code class="language-powershell">.\.venv\Scripts\python.exe -m local_rl.train --device cuda --offline --adapter outputs/qwen-sft-01/checkpoint-000030 --steps 20 --group-size 4 --max-new-tokens 96 --output outputs/qwen-sft-grpo-01
+</code></pre>
+<p>30 轮只是起步预算，不保证格式率足够。先评估再决定延长。SFT 日志的 <code>reward=0</code> 是占位，<strong>不能据此判断没有学习</strong>；看 loss、梯度和生成评估。</p>
+<p>SFT 用参考答案教格式与解答，GRPO 比较自己生成的候选；两者都更新参数，学习信号不同。</p>
+<p><a id="evaluation"></a></p>
+<h2>11. 独立评估</h2>
+<h3>11.1 基模与直接 GRPO 对照</h3>
+<p>完成第 8 节后运行：</p>
+<pre><code class="language-powershell">.\.venv\Scripts\python.exe -m local_rl.evaluate --checkpoint outputs/qwen-grpo-01/checkpoint-000020 --base --offline --limit 20 --output outputs/qwen-grpo-01/base-eval.json
+.\.venv\Scripts\python.exe -m local_rl.evaluate --checkpoint outputs/qwen-grpo-01/checkpoint-000020 --offline --limit 20 --output outputs/qwen-grpo-01/trained-eval.json
+</code></pre>
+<p><code>--base</code> 按检查点设置加载原始基模、跳过适配器。两次用相同评估题与长度设置，greedy 解码，不随机采样。</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>count</code></td>
+<td>实际评估题数</td>
+</tr>
+<tr>
+<td><code>accuracy</code></td>
+<td>合法答案框且数值正确的比例</td>
+</tr>
+<tr>
+<td><code>format_rate</code></td>
+<td>能解析合法数值答案框的比例，不要求数值正确</td>
+</tr>
+<tr>
+<td><code>truncated_fraction</code></td>
+<td>被标记为未正常结束的比例</td>
+</tr>
+<tr>
+<td><code>results</code></td>
+<td>每题参考答案、生成原文、正确性与工具观察</td>
+</tr>
+</tbody>
+</table>
+<h3>11.2 做过 SFT 时比较三种状态</h3>
+<p>完成第 10 节后运行：</p>
+<pre><code class="language-powershell">.\.venv\Scripts\python.exe -m local_rl.evaluate --checkpoint outputs/qwen-sft-01/checkpoint-000030 --offline --limit 20 --output outputs/qwen-sft-01/eval.json
+.\.venv\Scripts\python.exe -m local_rl.evaluate --checkpoint outputs/qwen-sft-grpo-01/checkpoint-000020 --offline --limit 20 --output outputs/qwen-sft-grpo-01/eval.json
+</code></pre>
+<p>加上上一节基模结果，就有“基模 → SFT → SFT 后 GRPO”三个观测点。若改过模型、数据或生成预算，应统一条件后重测，不能混比。</p>
+<p><code>--base</code> 永远指<strong>原始基模</strong>，不自动指 GRPO 起点的 SFT 适配器；评估 SFT 起点必须单独指定其检查点。</p>
+<p>训练与评估题目固定分割且不相交。20 题只是小样本检查，可设 <code>--limit 80</code> 评估全部算术保留题；题库不足时报告实际数量。反复用保留集调参后，它成为验证集，正式结论还需要额外未参与调参的数据。</p>
+<p>真实 Qwen 的短程 CPU 检查只验证流程贯通：一次 4 题评估中，训练前后严格 boxed 正确率都为 <code>0/4</code>。<strong>没有据此声称真实模型性能提升。</strong> 详见<a href="https://github.com/jiangshang0725/agentic-rl-lab/blob/feat/local-training-8gb/docs/local/validation.md">验证记录</a>。</p>
+<p><a id="checkpoints"></a></p>
+<h2>12. 保存、续训与加载适配器</h2>
+<p>默认每 10 轮及最后一轮保存。<code>manifest.json</code> 最后写入，表示保存完成；中断时选择最后一个包含它的检查点。</p>
+<table>
+<thead>
+<tr>
+<th>内容</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LoRA 与 tokenizer 文件</td>
+<td>加载训练后策略，仍需原基模</td>
+</tr>
+<tr>
+<td><code>training.pt</code></td>
+<td>优化器、混合精度缩放与随机状态</td>
+</tr>
+<tr>
+<td><code>manifest.json</code></td>
+<td>参数、轮次、更新次数、数据指纹、依赖版本和可获得的模型 revision</td>
+</tr>
+</tbody>
+</table>
+<p>toy 保存完整小网络；Qwen 保存 LoRA，不是整个 0.5B 模型。</p>
+<p>将第 8 节的 20 轮实验继续到总共 40 轮：</p>
+<pre><code class="language-powershell">.\.venv\Scripts\python.exe -m local_rl.train --device cuda --offline --resume outputs/qwen-grpo-01/checkpoint-000020 --steps 40 --batch-size 1 --group-size 4 --max-new-tokens 96 --output outputs/qwen-grpo-continued-01
+</code></pre>
+<p>这会执行第 21–40 轮，使用新输出目录，最终生成 <code>checkpoint-000040</code>。没有保存的轮次需要重跑。</p>
+<table>
+<thead>
+<tr>
+<th>选项</th>
+<th>恢复什么</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--resume</code></td>
+<td>权重、优化器、随机状态、累计更新次数</td>
+<td>继续同一实验</td>
+</tr>
+<tr>
+<td><code>--adapter</code></td>
+<td>适配器权重，重建训练状态</td>
+<td>SFT 后 GRPO、开始新实验</td>
+</tr>
+</tbody>
+</table>
+<p>续训不会自动补齐所有 CLI 参数，应保持原算法、学习率、模型路径、seed、数据、batch / group 等关键配置；具体以 <code>config.json</code> 为准。想换设置就开始新实验，不要修改 manifest 绕过检查。</p>
+<p><strong>当前限制：</strong> 从 <code>--adapter</code> 热启动的实验不能直接按现有 CLI 精确续训，因为配置校验要求保留该参数，而 CLI 又禁止它与 <code>--resume</code> 同时出现。此时可用最新检查点的 <code>--adapter</code> 开始新实验，但会重置优化器 / 随机状态，不应称为精确恢复。上面从基模开始的第 8 节示例不受此限制。</p>
+<p>CPU 测试覆盖同配置续训与不中断训练逐参数一致；跨硬件、驱动或精度不保证数值相同。</p>
+<p><a id="extensions"></a></p>
+<h2>13. 其他算法、工具任务与 OPD</h2>
+<p>这些是后续课程。先完成 toy、GPU 运行检查和一次独立评估，再逐项尝试，不要同时启动多个任务。</p>
+<h3>13.1 比较损失函数</h3>
+<table>
+<thead>
+<tr>
+<th><code>--objective</code></th>
+<th>教学重点</th>
+<th>实现边界</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>grpo</code> / <code>ppo</code></td>
+<td>组内优势 + token 概率比裁剪</td>
+<td>两者用同一 clipped surrogate，没有 value critic</td>
+</tr>
+<tr>
+<td><code>importance_sampling</code></td>
+<td>不裁剪的概率比目标</td>
+<td>看基本策略梯度方向</td>
+</tr>
+<tr>
+<td><code>cispo</code></td>
+<td>截断比率权重并停止其梯度</td>
+<td>核心损失教学实现</td>
+</tr>
+<tr>
+<td><code>gspo</code></td>
+<td>整条回答的几何平均概率比</td>
+<td>序列级裁剪</td>
+</tr>
+<tr>
+<td><code>dapo</code></td>
+<td>非对称裁剪、token 均值、有界重采样</td>
+<td>没有完整 soft-overlong shaping</td>
+</tr>
+<tr>
+<td><code>sft</code></td>
+<td>回答 token 交叉熵</td>
+<td>使用标准答案，不是奖励比较</td>
+</tr>
+<tr>
+<td><code>opd</code></td>
+<td>冻结教师给学生采样 token 打分</td>
+<td>同基模适配器，采样 reverse-KL 梯度估计</td>
+</tr>
+</tbody>
+</table>
+<p>例如先在相同算术配置下跑 10 轮 GSPO：</p>
+<pre><code class="language-powershell">.\.venv\Scripts\python.exe -m local_rl.train --device cuda --offline --objective gspo --steps 10 --output outputs/gspo-01
+</code></pre>
+<p>同时更换 <code>gspo</code> 和输出目录为 <code>importance_sampling</code>、<code>cispo</code> 或 <code>dapo</code> 即可分别尝试。DAPO 用 <code>--dynamic-attempts 8</code> 限制每轮尝试次数，耗尽仍可能零更新；它将截断轨迹奖励置零，是教学处理，不是完整论文的长度奖励。</p>
+<p>默认每批只更新一次，更新前新旧策略相同、比率为 1，裁剪通常不触发。观察裁剪可在<strong>整组对照实验</strong>统一增加 <code>--updates-per-batch 2</code>；更新预算也随之改变，不能将不同预算的差异归因于算法。</p>
+<p><code>--beta 0.02</code> 可加入对冻结基模的 KL 估计，通过禁用 LoRA 获取参考概率，不额外复制基模。参考不是 SFT 适配器；默认 <code>beta=0</code> 也不等于完整带 KL 的原始 GRPO 配方。</p>
+<h3>13.2 本地工具交互</h3>
+<pre><code class="language-powershell">.\.venv\Scripts\python.exe -m local_rl.train --device cuda --offline --task calculator --steps 10 --max-turns 2 --output outputs/calculator-01
+.\.venv\Scripts\python.exe -m local_rl.train --device cuda --offline --task retrieval --steps 10 --max-turns 2 --output outputs/retrieval-01
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>任务</th>
+<th>调用文本示例</th>
+<th>本机工具</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>calculator</code></td>
+<td><code>&lt;calc&gt;12+7&lt;/calc&gt;</code></td>
+<td>受限算术解析器，不执行任意 Python</td>
+</tr>
+<tr>
+<td><code>retrieval</code></td>
+<td><code>&lt;search&gt;Station-003&lt;/search&gt;</code></td>
+<td>合成记录表，不访问搜索 API</td>
+</tr>
+</tbody>
+</table>
+<p>模型生成调用，程序返回 observation，再继续回答。日志的 <code>observations</code> 保存工具结果。观察进入下一轮上下文，<strong>不作为模型生成的 token 计算策略损失</strong>。</p>
+<p>小模型可能直接回答、用错标签，或看了观察仍没给答案。以实际 rollout 为准，程序不会替它补正确答案。这是短轨迹学习环境，未完整复现 Search-R1、ReTool 或 ALFWorld。</p>
+<h3>13.3 本地 OPD：不用大教师 API</h3>
+<p>完成第 10 节后，用 SFT 适配器作冻结教师：</p>
+<pre><code class="language-powershell">.\.venv\Scripts\python.exe -m local_rl.train --device cuda --offline --objective opd --teacher-adapter outputs/qwen-sft-01/checkpoint-000030 --steps 20 --group-size 2 --output outputs/opd-01
+</code></pre>
+<p>学生采样自己的回答，教师提供这些 token 的概率信息，训练更新学生。师生共享一个冻结基模，只切换适配器，不同时驻留两个基模。学生从基模加新适配器开始，教师用已有 SFT 适配器。</p>
+<p>要求同基模、同 tokenizer、<code>--updates-per-batch 1</code>、<code>--beta 0</code>。这是 token 级采样 reverse-KL 的梯度估计，不是全词表或完整轨迹 KL 的精确计算。教师不保证比学生强，需要分别评估；OPD 的奖励仅用于观测，不决定更新。</p>
+<p><a id="data"></a></p>
+<h2>14. 自定义数据与 GSM8K</h2>
+<h3>14.1 离线 JSONL</h3>
+<p>每行必须含 <code>question</code>、数值 <code>answer</code> 和 <code>split</code>：</p>
+<pre><code class="language-json">{&quot;question&quot;:&quot;What is 1 + 2?&quot;,&quot;answer&quot;:&quot;3&quot;,&quot;split&quot;:&quot;train&quot;}
+{&quot;question&quot;:&quot;What is 7 + 8?&quot;,&quot;answer&quot;:&quot;15&quot;,&quot;split&quot;:&quot;eval&quot;}
+</code></pre>
+<p>保存为项目内 <code>data/math.jsonl</code>，用 <strong>UTF-8 无 BOM</strong>。这是格式示例，正式实验需要更多不同题目，并保留独立评估题。</p>
+<pre><code class="language-powershell">.\.venv\Scripts\python.exe -m local_rl.train --device cuda --offline --task jsonl --data data/math.jsonl --steps 20 --output outputs/custom-01
+.\.venv\Scripts\python.exe -m local_rl.evaluate --checkpoint outputs/custom-01/checkpoint-000020 --offline --output outputs/custom-01/eval.json
+</code></pre>
+<p>重复题目会被拒绝，包括跨 split 重复。当前奖励只支持有限数值；证明题、文字评价或 <code>1/2</code> 这样的表达式需其他奖励或转换成支持的数值形式。续训和评估期间保留同一个数据文件。</p>
+<h3>14.2 再尝试 GSM8K</h3>
+<p>内置算术跑通后，按需安装 datasets：</p>
+<pre><code class="language-powershell">uv sync --python 3.12 --extra cuda --extra datasets --frozen
+if ($LASTEXITCODE -ne 0) { throw &quot;datasets 安装失败。&quot; }
+.\.venv\Scripts\python.exe -m local_rl.train --device cuda --task gsm8k --samples 64 --steps 20 --max-new-tokens 128 --output outputs/gsm8k-01
+</code></pre>
+<p>首次需下载公开数据集，使用官方 train / test，不用付费 API。长题可能超过 256 prompt tokens，程序会报错而非静默丢掉题干；128 回答 tokens 也可能不够推理。先筛短题，或测量显存后调长度，不要把低分都解释成算法失败。</p>
+<p>完全离线时，先导出带 split 的 JSONL，再用 <code>--task jsonl --offline</code>。当前程序会拒绝 <code>--task gsm8k --offline</code>，即使数据已有缓存。</p>
+<p>仍需画图时同步保留 plots：<code>uv sync --python 3.12 --extra cuda --extra datasets --extra plots --frozen</code>。</p>
+<p><a id="troubleshooting"></a></p>
+<h2>15. 故障排查与 8GB 显存调整</h2>
+<h3>15.1 按报错定位</h3>
+<table>
+<thead>
+<tr>
+<th>现象</th>
+<th>检查与处理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>No module named local_rl</code></td>
+<td>回项目根目录，确认 <code>local_rl/train.py</code> 存在，使用本章 Python 路径</td>
+</tr>
+<tr>
+<td>仍提示 PyTRIO 登录或额度</td>
+<td>很可能运行了旧 <code>experiments/...py</code>；本地入口为 <code>-m local_rl.train</code></td>
+</tr>
+<tr>
+<td><code>uv</code> 找不到</td>
+<td>检查安装与 PATH，安装后重启终端</td>
+</tr>
+<tr>
+<td>锁文件版本不支持</td>
+<td>更新 uv，不要删除锁文件后任意升级所有包</td>
+</tr>
+<tr>
+<td>换源仍从旧站下载</td>
+<td>检查 lock 的 source / URL，执行第 4 节刷新锁文件</td>
+</tr>
+<tr>
+<td>南京大学镜像临时缺包</td>
+<td>看具体包与 URL，稍后重试；必要时只恢复 Torch 官方地址并重新 lock</td>
+</tr>
+<tr>
+<td>Python 下载超时或回源</td>
+<td>若已有 Python 3.12，可让 <code>--python</code> 指向其完整路径</td>
+</tr>
+<tr>
+<td><code>torch_cuda_runtime: null</code></td>
+<td>装了 CPU Torch 或用错环境；重新 <code>uv sync --python 3.12 --extra cuda --frozen</code></td>
+</tr>
+<tr>
+<td>runtime 非空但 CUDA 不可用</td>
+<td>检查 <code>nvidia-smi</code>、驱动与设备；更新兼容驱动并重启</td>
+</tr>
+<tr>
+<td>禁止执行 <code>Activate.ps1</code></td>
+<td>本章直接调用 Python，不需激活</td>
+</tr>
+<tr>
+<td>HF 下载超时 / 429</td>
+<td>网络或限速，重试或用第 7 节镜像 / 本地完整模型；不是购买训练额度</td>
+</tr>
+<tr>
+<td><code>--offline</code> 找不到模型</td>
+<td>先完整下载，保留缓存与相同模型名</td>
+</tr>
+<tr>
+<td>Windows symlink 警告</td>
+<td>通常影响缓存空间效率，检查最终是否下载成功</td>
+</tr>
+<tr>
+<td>输出目录 / 评估文件已存在</td>
+<td>将 <code>...-01</code> 改为 <code>...-02</code>，保护已有结果</td>
+</tr>
+<tr>
+<td><code>Resume config mismatch</code></td>
+<td>对照原 config 保持参数；改变设置时新建实验</td>
+</tr>
+<tr>
+<td>JSONL BOM / 解码错误</td>
+<td>保存 UTF-8 无 BOM；留意 Windows PowerShell 5 默认编码</td>
+</tr>
+<tr>
+<td>loss / 梯度非有限</td>
+<td>保留失败日志，检查学习率、精度和改动，恢复默认小模型配置</td>
+</tr>
+</tbody>
+</table>
+<p>裸 <code>uv run python ...</code> 可能按没有 extra 的配置同步环境。若用 uv run，应写 <code>uv run --extra cuda --frozen python -m local_rl.train ...</code>；本教程的直接 Python 写法不会隐式同步依赖。</p>
+<h3>15.2 CUDA out of memory</h3>
+<p>关闭其他占 GPU 的软件，只运行一个训练进程。保留 0.5B、LoRA rank 8、默认梯度检查点。在新目录用短序列先检查反向传播：</p>
+<pre><code class="language-powershell">.\.venv\Scripts\python.exe -m local_rl.train --device cuda --offline --objective sft --steps 2 --batch-size 1 --group-size 2 --max-prompt-tokens 128 --max-seq-len 256 --max-new-tokens 48 --output outputs/gpu-short-01
+</code></pre>
+<p>这是短序列检查配置，不保证适合所有任务。SFT 用参考答案，<code>max-new-tokens</code> 不负责裁剪监督答案；其显存取决于真实输入 / 目标长度和总长度约束。换回 GRPO 后，较小生成预算才直接限制生成长度。</p>
+<p><code>max-prompt-tokens</code> 必须小于 <code>max-seq-len</code>。长题超过限制应筛题或调整上限，不能无声裁掉题干。</p>
+<p>本实现已逐条生成和 backward，降低 group-size 主要减少采样次数与耗时，不保证显著降低单条峰值。优先缩短实际序列、清理其他 GPU 占用；不要直接换成 7B 或关闭默认梯度检查点。</p>
+<h3>15.3 一直 reward=0</h3>
+<p>按顺序看原始回答：</p>
+<ol>
+<li>数字对但没答案框：先做 SFT 格式热身。</li>
+<li>回答未完成、截断多：缩短任务，或在显存允许时增回答预算。</li>
+<li>格式对但算错：任务可能太难，回到短算术和 toy。</li>
+<li>候选总一样：观察采样多样性，先保留默认 temperature。</li>
+<li>全对却不更新：没有组内差异，也是正常退化组。</li>
+</ol>
+<p>不要改成“生成成功就奖励 1”，也不要拿评估题训练制造提升。能解释没有信号的原因，本身就是学习成果。</p>
+<h3>15.4 中断与重复运行</h3>
+<p>选最后一个有 <code>manifest.json</code> 的完整检查点；没保存的轮次会丢失。训练不能直接向非空输出目录重跑，评估也拒绝覆盖已有文件。使用新的路径，保留可比较的原始记录。</p>
+<p><a id="learning"></a></p>
+<h2>16. 读代码、练习与完成标准</h2>
+<h3>16.1 按执行顺序读代码</h3>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>要回答的问题</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/jiangshang0725/agentic-rl-lab/blob/feat/local-training-8gb/local_rl/data.py"><code>local_rl/data.py</code></a></td>
+<td>怎样分训练 / 评估？什么答案得分？</td>
+</tr>
+<tr>
+<td><a href="https://github.com/jiangshang0725/agentic-rl-lab/blob/feat/local-training-8gb/local_rl/policy.py"><code>local_rl/policy.py</code></a></td>
+<td>怎样生成、哪些参数更新、token 如何对齐？</td>
+</tr>
+<tr>
+<td><a href="https://github.com/jiangshang0725/agentic-rl-lab/blob/feat/local-training-8gb/local_rl/losses.py"><code>local_rl/losses.py</code></a></td>
+<td>优势、概率比、裁剪与 KL 怎么算？</td>
+</tr>
+<tr>
+<td><a href="https://github.com/jiangshang0725/agentic-rl-lab/blob/feat/local-training-8gb/local_rl/train.py"><code>local_rl/train.py</code></a></td>
+<td>何时采样、backward、step、跳过更新？</td>
+</tr>
+<tr>
+<td><a href="https://github.com/jiangshang0725/agentic-rl-lab/blob/feat/local-training-8gb/local_rl/checkpoint.py"><code>local_rl/checkpoint.py</code></a></td>
+<td>如何保存随机状态、优化器与数据指纹？</td>
+</tr>
+<tr>
+<td><a href="https://github.com/jiangshang0725/agentic-rl-lab/blob/feat/local-training-8gb/local_rl/evaluate.py"><code>local_rl/evaluate.py</code></a></td>
+<td>如何公平比较基模与适配器？</td>
+</tr>
+</tbody>
+</table>
+<p>逐段解释见<a href="https://github.com/jiangshang0725/agentic-rl-lab/blob/feat/local-training-8gb/docs/local/walkthrough.md">从采样到更新</a>。先思考：<code>generate()</code> 为什么不保留计算图，训练时却要再前向一次？</p>
+<h3>16.2 五个动手练习</h3>
+<ol>
+<li>从 toy 取一组奖励，手算均值、总体标准差和优势，对照日志。</li>
+<li>固定其他条件，比较 group-size 2 与 4 的有效组比例和耗时。</li>
+<li>找到 <code>loss≈0</code> 但 <code>grad_norm&gt;0</code> 的记录，解释标量与导数的区别。</li>
+<li>比较基模、SFT、SFT 后 GRPO 的格式率和正确率，保留原文证据。</li>
+<li>查看工具轨迹，区分模型动作与工具观察，确认观察不是策略目标。</li>
+</ol>
+<p>每次只改一个因素，使用新目录。记录模型 / revision、seed、样本数、长度预算、轮次、实际更新次数与评估条件。</p>
+<h3>16.3 本章完成标准</h3>
+<ul>
+<li>能解释本机和模型下载站的职责，无需付费训练服务。</li>
+<li>环境创建成功，Torch 的 CPU / CUDA 构建与目标一致。</li>
+<li>CPU toy 跑通，有训练前后独立评估。</li>
+<li>GPU 诊断与真实 SFT 反向传播通过，记录实际显存。</li>
+<li>能从 rollout 解释奖励、优势和更新，或解释零更新原因。</li>
+<li>能区分模型缓存、LoRA 检查点、优化器状态和评估文件。</li>
+</ul>
+<p>达到这些标准就完成了本地流程入门，无需先追求 GSM8K 高分或完整论文复现。</p>
+<p><a id="reference"></a></p>
+<h2>17. 命令速查与参考资料</h2>
+<p>环境安装后在项目根目录执行；重复训练 / 评估时更换输出路径。</p>
+<table>
+<thead>
+<tr>
+<th>想做什么</th>
+<th>入口</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>环境诊断</td>
+<td><code>.\.venv\Scripts\python.exe -m local_rl.doctor</code></td>
+</tr>
+<tr>
+<td>查看训练参数</td>
+<td><code>.\.venv\Scripts\python.exe -m local_rl.train --help</code></td>
+</tr>
+<tr>
+<td>查看评估参数</td>
+<td><code>.\.venv\Scripts\python.exe -m local_rl.evaluate --help</code></td>
+</tr>
+<tr>
+<td>训练摘要</td>
+<td><code>.\.venv\Scripts\python.exe -m local_rl.analyze outputs/qwen-grpo-01</code></td>
+</tr>
+<tr>
+<td>GPU 环境</td>
+<td><code>uv sync --python 3.12 --extra cuda --frozen</code></td>
+</tr>
+<tr>
+<td>CPU 环境</td>
+<td><code>uv sync --python 3.12 --extra cpu --frozen</code></td>
+</tr>
+</tbody>
+</table>
+<p>本章按当前 CLI 核对，GPU 性能以你的机器日志为准。测试与实测条件见 <a href="https://github.com/jiangshang0725/agentic-rl-lab/blob/feat/local-training-8gb/README.md">README</a> 和<a href="https://github.com/jiangshang0725/agentic-rl-lab/blob/feat/local-training-8gb/docs/local/validation.md">验证记录</a>。</p>
+<p>参考资料（镜像服务可能变化）：</p>
+<ul>
+<li><a href="https://docs.astral.sh/uv/getting-started/installation/">uv 安装</a>、<a href="https://docs.astral.sh/uv/reference/environment/">环境变量</a>、<a href="https://docs.astral.sh/uv/concepts/configuration-files/">配置优先级</a></li>
+<li><a href="https://mirrors.tuna.tsinghua.edu.cn/help/pypi/">清华 PyPI 镜像</a></li>
+<li><a href="https://mirrors.ustc.edu.cn/help/github-release.html">中科大 GitHub Release 镜像</a></li>
+<li><a href="https://help.mirror.nju.edu.cn/pytorch/">南京大学 PyTorch 镜像</a></li>
+<li><a href="https://pytorch.org/get-started/previous-versions/">PyTorch 历史版本与 CUDA 轮子</a></li>
+<li><a href="https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct">Qwen2.5-0.5B-Instruct 模型页</a></li>
+<li><a href="https://hf-mirror.com/">HF-Mirror</a>，可选第三方下载镜像</li>
+<li><a href="https://datawhalechina.github.io/agentic-rl-lab/experiments/getting-started/">上游在线教程</a>，用于对照原远程版本</li>
+</ul>
+<footer>由仓库 experiments/getting-started/readme.md 生成。正文、样式与复制按钮可离线使用；源码和参考链接需要网络。基于 Datawhale Agentic RL Lab。</footer>
+</main></div><script>
+document.querySelectorAll('pre').forEach(pre => {
+  const wrap = document.createElement('div'); wrap.className = 'code-wrap';
+  pre.before(wrap); wrap.append(pre);
+  const button = document.createElement('button'); button.className = 'copy';
+  button.type = 'button'; button.textContent = '复制代码';
+  button.addEventListener('click', async () => {
+    const text = pre.textContent;
+    try {
+      if (navigator.clipboard && window.isSecureContext) await navigator.clipboard.writeText(text);
+      else {
+        const field = document.createElement('textarea'); field.value = text;
+        field.style.position = 'fixed'; field.style.opacity = '0'; document.body.append(field);
+        field.select(); const copied = document.execCommand('copy'); field.remove();
+        if (!copied) throw new Error('Clipboard unavailable');
+      }
+      button.textContent = '已复制';
+    } catch (_) { button.textContent = '请选中文本复制'; }
+    setTimeout(() => { button.textContent = '复制代码'; }, 2500);
+  });
+  wrap.append(button);
+});
+</script></body></html>
