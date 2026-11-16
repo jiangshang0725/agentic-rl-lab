@@ -30,10 +30,10 @@ def repository_link(match):
 
 def main():
     source = SOURCE.read_text(encoding="utf-8")
-    entries = re.findall(r"^\d+\. \[(.+)\]\(#([a-z]+)\)$", source, re.MULTILINE)
+    entries = re.findall(r"^(\d+)\. \[(.+)\]\(#([a-z]+)\)$", source, re.MULTILINE)
     navigation = "\n".join(
-        f'<li><a href="#{anchor}">{i}. {html.escape(label)}</a></li>'
-        for i, (label, anchor) in enumerate(entries, 1)
+        f'<li><a href="#{anchor}">{number}. {html.escape(label)}</a></li>'
+        for number, label, anchor in entries
     )
     # Keep one navigable table of contents, with the same stable anchors as Markdown.
     source = re.sub(r"## 目录\n.*?(?=<a id=)", "", source, count=1, flags=re.DOTALL)
@@ -58,7 +58,8 @@ h3{font-size:18px;margin:28px 0 12px}p{margin:14px 0}a{color:var(--accent);text-
 strong{font-weight:700}li{margin:6px 0}code{font: .9em/1.7 Consolas,"Cascadia Code",monospace;background:#edf3f5;padding:2px 4px;border-radius:3px;overflow-wrap:anywhere}
 .code-wrap{position:relative;margin:18px 0}pre{margin:0;background:#142d38;color:#eef6f7;border-radius:7px;padding:42px 18px 18px;overflow:auto}
 pre code{display:block;background:none;color:inherit;padding:0;white-space:pre-wrap;overflow-wrap:anywhere;word-break:normal;font-size:13px}
-.copy{position:absolute;right:9px;top:8px;border:1px solid #6a838c;border-radius:4px;background:#203f4b;color:#eaf3f5;padding:3px 10px;cursor:pointer;font:12px/1.6 inherit}
+.copy{position:absolute;right:9px;top:8px;border:1px solid #6a838c;border-radius:4px;background:#203f4b;color:#eaf3f5;padding:3px 10px;cursor:pointer;font-family:inherit;font-size:12px;line-height:1.6}
+.code-label{position:absolute;left:14px;top:9px;color:#c3d9df;font-size:11px;max-width:calc(100% - 110px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .copy:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #bf7846;outline-offset:2px}
 table{display:block;overflow:auto;border-collapse:collapse;width:100%;font-size:14px;margin:20px 0}
 th,td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top;min-width:100px}
@@ -66,14 +67,19 @@ th{background:#edf4f5;font-weight:650}tr:nth-child(even){background:#f8fafb}td c
 footer{margin-top:38px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
 @media(max-width:900px){.shell{display:block;padding:18px 14px}aside{position:static;max-height:none;margin:0 0 20px}nav ol{columns:2}.edition{margin-bottom:8px}main{padding:26px 22px}h1{font-size:27px}}
 @media(max-width:560px){nav ol{columns:1}body{font-size:15px}main{padding:20px 16px}h1{font-size:25px}h2{font-size:21px}th,td{padding:8px}}
-@media print{body{background:white;font-size:10pt}.shell{display:block;padding:0}aside,.copy,.tag{display:none}main{border:0;padding:0}pre{background:#f1f4f6;color:#182832;padding:12px}h2,h3{break-after:avoid}tr{break-inside:avoid}a{color:inherit}table{font-size:9pt}}
+@media print{body{background:white;font-size:10pt}.shell{display:block;padding:0}aside,.copy,.code-label,.tag{display:none}main{border:0;padding:0}pre{background:#f1f4f6;color:#182832;padding:12px}h2,h3{break-after:avoid}tr{break-inside:avoid}a{color:inherit}table{font-size:9pt}}
 """
     script = """
 document.querySelectorAll('pre').forEach(pre => {
   const wrap = document.createElement('div'); wrap.className = 'code-wrap';
   pre.before(wrap); wrap.append(pre);
+  const isCommand = !!pre.querySelector('code.language-powershell');
+  const label = document.createElement('span'); label.className = 'code-label';
+  label.textContent = isCommand ? 'PowerShell 输入' : '数据 / 示例输出 · 不在终端执行';
+  wrap.append(label);
   const button = document.createElement('button'); button.className = 'copy';
-  button.type = 'button'; button.textContent = '复制代码';
+  const buttonLabel = isCommand ? '复制命令' : '复制文本';
+  button.type = 'button'; button.textContent = buttonLabel;
   button.addEventListener('click', async () => {
     const text = pre.textContent;
     try {
@@ -86,7 +92,7 @@ document.querySelectorAll('pre').forEach(pre => {
       }
       button.textContent = '已复制';
     } catch (_) { button.textContent = '请选中文本复制'; }
-    setTimeout(() => { button.textContent = '复制代码'; }, 2500);
+    setTimeout(() => { button.textContent = buttonLabel; }, 2500);
   });
   wrap.append(button);
 });
@@ -94,10 +100,10 @@ document.querySelectorAll('pre').forEach(pre => {
     document = f"""<!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="Windows、RTX 3070 8GB 免费本地强化学习教程：国内镜像、CPU toy、Qwen LoRA、GRPO、SFT、评估与排错。">
-<title>本地训练入门 · Agentic RL Lab</title><style>{style}</style></head>
-<body><div class="shell"><aside><p class="brand">AGENTIC RL LAB</p><p class="edition">本地学习版 / 2026-11-16</p>
-<nav aria-label="教程目录"><details open><summary>学习目录 · 17 节</summary><ol>{navigation}</ol></details></nav></aside>
-<main><span class="tag">WINDOWS · RTX 3070 8GB · 无付费 API</span>{body}
+<title>零基础本地训练手册 · Agentic RL Lab</title><style>{style}</style></head>
+<body><div class="shell"><aside><p class="brand">AGENTIC RL LAB</p><p class="edition">零基础详细版 / 2026-11-16</p>
+<nav aria-label="教程目录"><details open><summary>学习目录 · {len(entries)} 节</summary><ol>{navigation}</ol></details></nav></aside>
+<main><span class="tag">从打开终端开始 · WINDOWS · 3070 8GB</span>{body}
 <footer>由仓库 experiments/getting-started/readme.md 生成。正文、样式与复制按钮可离线使用；源码和参考链接需要网络。基于 Datawhale Agentic RL Lab。</footer>
 </main></div><script>{script}</script></body></html>
 """
