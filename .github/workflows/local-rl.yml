@@ -1,0 +1,23 @@
+name: Local RL tests
+on:
+  push:
+    paths: ['local_rl/**', 'tests/**', 'pyproject.toml', 'uv.lock', '.github/workflows/local-rl.yml']
+  pull_request:
+    paths: ['local_rl/**', 'tests/**', 'pyproject.toml', 'uv.lock', '.github/workflows/local-rl.yml']
+permissions:
+  contents: read
+jobs:
+  cpu:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.13.6'
+      - run: uv sync --python 3.12 --extra cpu --frozen
+      - run: uv run --extra cpu --frozen python -m pytest -q
+      - run: uv run --extra cpu --frozen ruff check local_rl tests

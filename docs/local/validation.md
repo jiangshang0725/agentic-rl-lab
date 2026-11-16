@@ -1,0 +1,64 @@
+# 验证记录
+
+日期：2026-11-16。以下是执行过的检查，不是 3070 的速度或显存承诺。
+
+## 环境与自动化测试
+
+- Linux x86_64，Python 3.12.14。
+- PyTorch 2.6.0+cpu、Transformers 4.51.3、PEFT 0.15.2、Accelerate 1.6.0。
+- `uv sync --python 3.12 --extra cpu --frozen`：完成独立环境安装。
+- `pytest -q`：36 项通过。
+- `ruff check local_rl tests`：通过；`uv lock --check`：通过。
+- 自动化测试不下载模型：在临时目录创建微型 Qwen2 和 tokenizer，再使用真实 Transformers/PEFT 训练。
+
+覆盖：优势退化组、裁剪方向、GSPO 梯度、KL、reverse-KL 系数停止梯度、数值奖励、数据分割、受限计算器、生成 token 对齐、工具观察不计入 targets、冻结参考/教师、LoRA 保存恢复、无信号时跳过更新、DAPO 采样预算、断点续训逐参数一致性。
+
+仓库另提供 Windows/Linux CPU 的 GitHub Actions 工作流。这里的本地测试环境没有 CUDA；Windows + CUDA、3070 8GB 峰值和运行速度仍需实机验证。
+
+## 离线 toy 实验
+
+```bash
+python -m local_rl.train --backend toy --task toy --device cpu --steps 100 --batch-size 4 --group-size 8 --learning-rate .01 --save-every 100 --output outputs/toy-max-100
+```
+
+任务：两个 0–9 数字中选出较大者；十个离散动作；从随机初始化的 1,994 参数网络开始。
+
+| 项目 | 观察值 |
+| --- | --- |
+| seed | 42 |
+| 训练样本 | 固定训练分区的前 64 题 |
+| 评估样本 | 独立分区 20 题，greedy |
+| 初始评估正确率 | 2/20 = 10% |
+| 训练后评估正确率 | 11/20 = 55% |
+| 采样轮数 / 优化次数 | 100 / 85 |
+| 全程采样平均奖励 | 0.5015625 |
+
+这是一次固定种子的小实验，只能说明该教学任务出现了学习信号，不代表语言模型能力、统计显著性或所有种子都会提升。
+
+## 真实 Qwen2.5-0.5B-Instruct
+
+模型 revision：`7ae557604adf67be50417f59c2c2f167def9a775`。CPU FP32，LoRA rank 8，`q_proj` / `v_proj`，540,672 个可训练参数。公开权重下载一次后，以下执行使用 `--offline`。
+
+| 检查 | 实际观察 |
+| --- | --- |
+| SFT，2 轮，8 个候选算术训练题 | 完成 2 次更新并保存适配器与优化器；梯度非零 |
+| GRPO，2 轮，每题 4 个回答，max-new-tokens=64 | 第一轮奖励均值 0.5、一次有效更新；第二轮奖励全零、正确跳过 |
+| 基模 vs GRPO 检查点，独立 4 题，greedy | 两者严格 boxed 数值正确率均为 0/4，格式率均为 0/4 |
+| 本地 OPD，SFT 适配器作教师，1 轮、1 条回答 | 完成一次学生更新，梯度范数约 0.758；保存本地检查点 |
+
+GRPO 实际命令：
+
+```bash
+python -m local_rl.train --device cpu --offline --steps 2 --group-size 4 --max-new-tokens 64 --output outputs/qwen-grpo
+```
+
+评估中部分回答算对了数字，但没有按要求输出 `\boxed{...}`，因此严格奖励为零。这正是需要同时看原始文本和格式率的原因。**没有证据表明这两轮 GRPO 提升了真实模型效果。** 短程检查验证的是生成、评分、求导、更新、保存与评估能贯通。
+
+## 未验证与未实现
+
+- 尚无 3070 或其他 GPU 的实测峰值、吞吐和长时间稳定性数据。
+- 尚无 Windows CUDA 完整训练实测。
+- 真实 GSM8K 训练、长期提升、多随机种子统计尚未执行。
+- 本地教师不保证比学生强；工具调用不保证模型学会使用。
+- QLoRA、完整 DAPO 长度奖励、大型多模态、ALFWorld/TEMPO/AgentOPSD/Tournament 的全量迁移不在当前实现内。
+- 请对照[迁移表](migration.md)，不要把教学变体描述成完整论文复现。

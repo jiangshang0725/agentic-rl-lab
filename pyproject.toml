@@ -1,35 +1,50 @@
 [project]
-name = "agentic-rl-lab"
-version = "0.1.0"
-requires-python = ">=3.13"
+name = "agentic-rl-lab-local"
+version = "0.2.0"
+description = "Local, inspectable reinforcement learning experiments for an 8 GB GPU"
+requires-python = ">=3.11,<3.14"
 dependencies = [
-    "datasets>=5.0.0",
-    "httpx>=0.28.1",
-    "math-verify>=0.9.0",
-    "matplotlib>=3.11.0",
-    "modelscope>=1.38.1",
-    "numpy>=2.5.1",
-    "openai>=2.44.0",
-    "python-dotenv>=1.2.2",
-    "pytrio==0.2.9",
-    "swanlab==0.10.4",
-    "torch>=2.9.1",
-    "torchvision>=0.27.1",
-    "tqdm>=4.68.3",
+    "torch==2.6.0",
+    "transformers==4.51.3",
+    "peft==0.15.2",
+    "accelerate==1.6.0",
+    "numpy>=1.26,<3",
 ]
 
 [project.optional-dependencies]
-alfworld = [
-    "alfworld==0.4.2",
-    "spacy==3.8.13",
-]
+cpu = ["torch==2.6.0"]
+cuda = ["torch==2.6.0"]
+datasets = ["datasets==3.5.0"]
+plots = ["matplotlib>=3.8,<4"]
+
+[dependency-groups]
+dev = ["pytest==8.3.5", "ruff==0.11.8"]
+
+[tool.uv]
+package = false
+conflicts = [[{ extra = "cpu" }, { extra = "cuda" }]]
 
 [tool.uv.sources]
-# 本项目本地只做数据与张量处理；训练和采样由远程 PyTRIO 服务执行。
-torch = { index = "pytorch-cpu" }
-torchvision = { index = "pytorch-cpu" }
+torch = [
+    { index = "pytorch-cpu", extra = "cpu" },
+    { index = "pytorch-cu124", extra = "cuda" },
+]
 
 [[tool.uv.index]]
 name = "pytorch-cpu"
 url = "https://download.pytorch.org/whl/cpu"
 explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu124"
+url = "https://download.pytorch.org/whl/cu124"
+explicit = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+include = ["local_rl/**/*.py", "tests/**/*.py"]

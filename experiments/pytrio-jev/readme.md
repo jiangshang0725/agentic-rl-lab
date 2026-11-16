@@ -1,3 +1,5 @@
+> **历史远程实验 / Remote experiment**：本页保留上游内容，脚本可能使用 PyTRIO 或其他在线服务。免费本地学习请使用[本地启动指南](../../docs/local/start.md)；执行本页历史命令时需给 `uv` 添加 `--project remote`。
+
 # 第 9.5 篇，一顿麦当劳早餐，人人都可训练自己的 Jev 决策模型！
 
 <div align="center">
