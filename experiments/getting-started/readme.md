@@ -910,6 +910,18 @@ if ($LASTEXITCODE -ne 0) { throw "绘图依赖安装失败。" }
 
 图在 `outputs/qwen-grpo-01/learning.png`，无需 SwanLab。以后同步依赖时保留所需 extra；只同步 `cuda` 可能移除先前可选的绘图依赖。
 
+### 9.7 可选使用 SwanLab 本地看板
+
+希望像原在线教程一样在浏览器查看曲线，可以使用新增的日志导入工具。它明确使用 SwanLab `local` 模式，不需要登录或 API Key，不改动训练环境；已有 JSONL 日志也可导入。
+
+```powershell
+uv run local_rl/swanlab_export.py outputs/qwen-grpo-01 --watch
+```
+
+首次运行由 uv 安装可选看板依赖。等服务启动后，在本机浏览器打开 `http://127.0.0.1:5092`，保留提供服务的 PowerShell 窗口；停止查看时按 `Ctrl+C`。以后重开用 `uv run local_rl/swanlab_export.py --watch-only`，避免重复导入。
+
+若之前下载的 ZIP 里没有 `swanlab_export.py`，只补这个文件即可。完整步骤、国内镜像、原命令对应表、实时查看和排错见 [SwanLab 本地看板教程](../../docs/local/swanlab.md)。不要将 `--swanlab-mode online` 传给 `local_rl.train`，它没有这个参数。
+
 <a id="sft"></a>
 
 ## 10. 没有学习信号时先做 SFT

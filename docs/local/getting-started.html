@@ -1276,6 +1276,12 @@ if ($LASTEXITCODE -ne 0) { throw &quot;绘图依赖安装失败。&quot; }
 .\.venv\Scripts\python.exe -m local_rl.analyze outputs/qwen-grpo-01 --plot
 </code></pre>
 <p>图在 <code>outputs/qwen-grpo-01/learning.png</code>，无需 SwanLab。以后同步依赖时保留所需 extra；只同步 <code>cuda</code> 可能移除先前可选的绘图依赖。</p>
+<h3>9.7 可选使用 SwanLab 本地看板</h3>
+<p>希望像原在线教程一样在浏览器查看曲线，可以使用新增的日志导入工具。它明确使用 SwanLab <code>local</code> 模式，不需要登录或 API Key，不改动训练环境；已有 JSONL 日志也可导入。</p>
+<pre><code class="language-powershell">uv run local_rl/swanlab_export.py outputs/qwen-grpo-01 --watch
+</code></pre>
+<p>首次运行由 uv 安装可选看板依赖。等服务启动后，在本机浏览器打开 <code>http://127.0.0.1:5092</code>，保留提供服务的 PowerShell 窗口；停止查看时按 <code>Ctrl+C</code>。以后重开用 <code>uv run local_rl/swanlab_export.py --watch-only</code>，避免重复导入。</p>
+<p>若之前下载的 ZIP 里没有 <code>swanlab_export.py</code>，只补这个文件即可。完整步骤、国内镜像、原命令对应表、实时查看和排错见 <a href="https://github.com/jiangshang0725/agentic-rl-lab/blob/feat/local-training-8gb/docs/local/swanlab.md">SwanLab 本地看板教程</a>。不要将 <code>--swanlab-mode online</code> 传给 <code>local_rl.train</code>，它没有这个参数。</p>
 <p><a id="sft"></a></p>
 <h2>10. 没有学习信号时先做 SFT</h2>
 <p><strong>本节目标：</strong> 当模型还不会按规则答题时，用参考答案帮助它学习，再检查是否适合进入 GRPO。不是看到一轮 0 分就必须重训，也不是所有人都要反复做这一步。</p>

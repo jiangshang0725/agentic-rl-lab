@@ -91,3 +91,13 @@ python -m local_rl.train --device cpu --offline --steps 2 --group-size 4 --max-n
 - 新增 JSONL 示例经过真实 `load_examples` 读取：4 道 train、4 道 eval，题目不重合；示例 JSON 格式有效。
 - HTML 的 53 个代码块与 Markdown 逐字符核对一致，18 个目录锚点有效；新增命令 / 输出标签，内嵌 JavaScript 语法检查通过。正文无外部字体、脚本或样式依赖。
 - 文档生成脚本 Ruff 与 Python 编译检查通过；未修改训练代码与项目依赖。本轮没有声称执行 Windows PowerShell 或 GPU 全量实验，也没有新增浏览器视觉验证。
+
+## SwanLab 可选本地看板（2026-11-16）
+
+- 新增独立脚本 `local_rl/swanlab_export.py`，PEP 723 依赖为 `swanlab[dashboard]==0.10.4`，实际解析到 SwanBoard `0.1.10b2`。uv 可从脚本声明建立缓存环境；训练器、`pyproject.toml`、`uv.lock` 未改动。
+- 项目 CPU 环境：50 项测试通过，1 项可选 SDK 集成测试因未安装 SwanLab 而跳过。独立 SDK 环境执行 `tests/test_swanlab_export.py`：15 项全部通过。Ruff、`uv lock --check` 通过。
+- 覆盖实时写入的半行不丢失、不重复导入；恢复实验保留 21、22 等原始步数；拒绝重复 / 倒退步数、NaN、无穷值、损坏 JSON 和被截断的日志。
+- 真实 SDK 集成验证：环境变量设为 `SWANLAB_MODE=online`，导入器仍明确使用 `local`；拦截 Requests 的 HTTP 请求并令其报错，导入测试成功。检查实际 SwanLab SQLite 标签映射与磁盘曲线数据，步数、reward、loss、累计更新次数逐值匹配，配置保留且源文件字节未改变。关闭导入器自身硬件采样，不伪装为历史训练监控。
+- 实际运行 CPU toy 10 轮后，通过 `uv run local_rl/swanlab_export.py` 导入全部 10 轮。使用 SwanBoard 原生 FastAPI 测试客户端在进程内检查首页 HTML、实验信息和图表接口；reward 接口返回的 10 轮数值与原 JSONL 完全一致。
+- 本执行环境禁止服务启动时调用的网络接口枚举，直接 `swanlab watch` 在 `psutil.net_if_addrs()` 处遇到 `PermissionError`。因此没有宣称本机真实端口服务或浏览器页面已经验证；进程内接口验证不包含浏览器渲染。Windows/Linux CI 新增可选 SDK 集成检查，运行状态以 Actions 为准。
+- 新增 `docs/local/swanlab.md`，涵盖单文件更新、镜像、历史导入、10 轮训练、实时跟随、重开看板与排错；主教程和 HTML 增加本地看板入口。

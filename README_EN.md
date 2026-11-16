@@ -5,6 +5,7 @@ A local PyTorch / Transformers / PEFT learning path targeting Windows, an RTX 30
 - [Step-by-step Windows tutorial for absolute beginners (Chinese)](experiments/getting-started/readme.md)
 - [Start from your current setup](docs/local/start.md) / [Offline HTML](docs/local/getting-started.html)
 - [Code walkthrough (Chinese)](docs/local/walkthrough.md)
+- [Optional SwanLab local dashboard, without login (Chinese)](docs/local/swanlab.md)
 - [Migration scope](docs/local/migration.md)
 - [Validation and limitations](docs/local/validation.md)
 - [Original upstream README](README_EN_UPSTREAM.md)

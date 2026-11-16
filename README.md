@@ -11,6 +11,7 @@
 2. [从采样到更新：按代码顺序理解 GRPO](docs/local/walkthrough.md)
 3. [算法、任务与原项目的对应关系](docs/local/migration.md)
 4. [验证记录与边界](docs/local/validation.md)
+5. [使用 SwanLab 本地看板：历史日志导入与实时曲线，无需登录](docs/local/swanlab.md)
 
 ## 最快跑通：无需下载模型的 CPU 实验
 
@@ -47,7 +48,7 @@ uv sync --python 3.12 --extra cuda
 | 本地 OPD | `--objective opd --teacher-adapter ...`，同一基模上的冻结教师适配器 |
 | 数学题 | 内置算术、可选 GSM8K、显式划分的 JSONL |
 | 两轮工具交互 | `--task calculator` / `retrieval`，离线工具，工具观察不参与策略损失 |
-| 评估、续训、日志 | 固定 held-out 集、优化器/RNG 恢复、JSONL、可选本地图表 |
+| 评估、续训、日志 | 固定 held-out 集、优化器/RNG 恢复、JSONL、可选本地图表与 SwanLab 本地看板 |
 
 **本地路径不等同于完整迁移上游所有论文实验。** ALFWorld、TEMPO、视觉模型、大教师、Tournament-GRPO 的原实现仍保留在 `experiments/`，需要原远程环境。请看[迁移表](docs/local/migration.md)中的具体边界。
 

@@ -21,3 +21,5 @@ jobs:
       - run: uv sync --python 3.12 --extra cpu --frozen
       - run: uv run --extra cpu --frozen python -m pytest -q
       - run: uv run --extra cpu --frozen ruff check local_rl tests
+      - name: Optional local SwanLab integration
+        run: uv run --no-project --python 3.12 --with pytest==8.3.5 --with "swanlab[dashboard]==0.10.4" python -m pytest -q tests/test_swanlab_export.py

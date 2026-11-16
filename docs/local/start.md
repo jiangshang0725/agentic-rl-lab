@@ -18,6 +18,7 @@
 | 先学习算法，不下载模型 | [CPU toy](../../experiments/getting-started/readme.md#toy) |
 | 开始真实模型训练 | [模型准备与 GPU 检查](../../experiments/getting-started/readme.md#model) |
 | 已完成一次训练 | [日志解读](../../experiments/getting-started/readme.md#logs)、[独立评估](../../experiments/getting-started/readme.md#evaluation) |
+| 想像原教程一样用 SwanLab 看曲线 | [本地看板：无需登录，导入已有日志或实时跟随](swanlab.md) |
 | 中断、报错或显存不足 | [续训](../../experiments/getting-started/readme.md#checkpoints)、[排错](../../experiments/getting-started/readme.md#troubleshooting) |
 
 也可下载 [HTML 离线阅读版](getting-started.html)。保存后双击用 Edge / Chrome 打开；它是说明书，命令仍需复制到 PowerShell。网页会区分“复制命令”与“示例输出”。可用浏览器 `Ctrl+F` 搜索报错或术语，正文、样式与复制功能不需要外部网络；源码与参考链接需要联网。
