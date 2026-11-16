@@ -1,167 +1,83 @@
-<div align="center">
+# Agentic RL Lab · 本地学习版
 
-<a href="https://github.com/datawhalechina/agentic-rl-lab">
-  <img src="images/agentic-rl-lab.png" alt="Agentic-RL Lab" width=100% />
-</a>
+面向 **Windows、RTX 3070 8GB、16GB 内存** 的强化学习实验。默认入口使用 PyTorch、Transformers 和 PEFT，在自己的电脑上完成采样、评分、反向传播、优化、保存和评估。**不需要 PyTRIO、付费 API、SwanLab 账号或云 GPU。**
 
-<br>
+本项目基于 [Datawhale Agentic RL Lab](https://github.com/datawhalechina/agentic-rl-lab) 改造，保留上游署名、许可证和原实验资料。原始章节及结果见 [上游 README](README_UPSTREAM.md)；那些结果不是本地小模型的结果。
 
-<p>
-  <strong>中文</strong> | <a href="./README_EN.md">English</a>
-</p>
+## 从这里开始
 
-<p>
-  复现和拆解前沿 LLM 强化学习算法，用更简单的代码和更低的算力门槛，把 GRPO、OPD、OPSD、GSPO、DAPO、Search-R1、ReTool、ALFWorld、Vision GRPO、TEMPO、AgentOPSD、Spec-o3、PyTrio-Jev 等方法跑起来，方便复现。
-</p>
+1. [零基础本地训练手册：从打开 PowerShell 到训练与评估](experiments/getting-started/readme.md)
+   · [按当前进度进入](docs/local/start.md) · [HTML 离线阅读版](docs/local/getting-started.html)
+2. [从采样到更新：按代码顺序理解 GRPO](docs/local/walkthrough.md)
+3. [算法、任务与原项目的对应关系](docs/local/migration.md)
+4. [验证记录与边界](docs/local/validation.md)
+5. [使用 SwanLab 本地看板：历史日志导入与实时曲线，无需登录](docs/local/swanlab.md)
 
-<p>
-  <a href="https://pytrio.cn/"><img alt="PyTRIO" src="https://img.shields.io/badge/PyTRIO-Remote%20Training-d94a45?style=flat" /></a>
-  <a href="https://swanlab.cn/"><img alt="SwanLab" src="https://img.shields.io/badge/SwanLab-Experiment%20Tracking-258f4b?style=flat" /></a>
-  <a href="https://www.zhihu.com/people/feng-qi-xia-pian"><img alt="Zhihu" src="https://img.shields.io/badge/Zhihu-知乎-4362f6?style=flat" /></a>
-  <a href="https://www.xiaohongshu.com/user/profile/63c2055e000000002502c58c"><img alt="Rednote" src="https://img.shields.io/badge/Rednote-小红书-e93c49?style=flat" /></a>
-  <a href="https://github.com/datawhalechina/agentic-rl-lab"><img alt="visitors" src="https://komarev.com/ghpvc/?username=KMnO4-zx-agentic-rl-lab&amp;label=visitors&amp;color=1283c3&amp;style=flat" /></a>
-  <img alt="Python" src="https://img.shields.io/badge/Python-3.13%2B-306998?style=flat" />
-</p>
+## 最快跑通：无需下载模型的 CPU 实验
 
-</div>
+先安装 [uv](https://docs.astral.sh/uv/getting-started/installation/)，在仓库根目录的 PowerShell 中运行：
 
-<p align="center">
-  💬 <strong>微信交流群：</strong>
-  <a href="https://github.com/datawhalechina/agentic-rl-lab/issues/13">点击查看群二维码</a>
-</p>
-
-<p align="center">
-  📖 <strong>在线阅读：</strong>
-  <a href="https://datawhalechina.github.io/agentic-rl-lab/">中文实验手册</a> ·
-  <a href="https://datawhalechina.github.io/agentic-rl-lab/en/">English</a>
-</p>
-
-## 项目介绍
-
-&emsp;&emsp;这是一个偏实验记录和教程的仓库。我会用 [PyTRIO](https://pytrio.com) 复现一组和 LLM / Agent RL 相关的强化学习算法，主要做三件事：
-
-1. 先把算法讲明白：它从哪篇论文来，解决什么问题，核心变量是什么。
-2. 再用可运行代码复现：数据、reward、loss、训练循环、SwanLab 记录都放在仓库里。
-3. 可能未来会做一个更友好和轻量的 Agent RL 和 Harness RL 训练框架～
-
-> *&emsp;&emsp;我曾经很想深入研究 Agentic RL，但我当时看到的训练方案，动不动就要 4 卡、8 卡，训推一体的复杂度、现有框架（verl、Slime、Areal）高耦合的工程代码，让我迟迟没有动手。后来接触到 Tinker 和 PyTrio 之后才愈发觉得 Train API 是一个面向未来的大模型基础设施，才有机会以极低的门槛把这些 Agentic RL 算法复现学会并跑起来。我复现这 14 篇 Agentic RL 论文中的算法只用了不到两个月时间。现在的论文对我而言，最核心的内容只有几行公式而已，这就是 Train API 的真正魅力，可以剥离所有噪声和干扰项，为研究员和学习者留下最为核心的算法内容。*
-
-> *&emsp;&emsp;所以我想，能不能让更多和我一样的人，也能早点开始？把算法讲明白，把代码写简单，把实验的入门成本降下来，让每一个有学习想法的人，可以动手试一试。我觉得研究和学习前沿技术的机会，不该取决于你在哪所学校、哪家公司，或者手里有多少张卡。我们能做的事情可能很小，但目前确实没有成体系的 Agentic RL 学习内容，Only datawhale can do！*
-
-> *&emsp;&emsp;我要这天，不再高高在上。Agentic RL 属于每一个想要研究和学习它的人！*
-
-&emsp;&emsp;如果你有不错的 Agentic-RL idea，想做论文或者做项目，可以写一封邮件来申请 PyTrio 的代金券。审核会比较严格，希望大家在邮件里认真写清楚自己的 proposal。PyTrio 也很乐意赞助大家做 Agentic RL 的项目和论文，邮箱：violin@pytrio.com
-
-## 文章目录
-
-| 主题 | 内容 | 在线版 |
-| --- | --- | --- |
-| [环境配置与基础概念](./experiments/getting-started/readme.md) | 从零开始：装依赖、注册 PyTRIO 与 SwanLab、跑通第一次训练 | [阅读](https://datawhalechina.github.io/agentic-rl-lab/experiments/getting-started/) |
-| [Loss Function](./experiments/loss-functions/readme.md) | 用直觉解释 `importance_sampling`、`ppo`、`cispo` 分别在优化什么 | [阅读](https://datawhalechina.github.io/agentic-rl-lab/experiments/loss-functions/) |
-| [GRPO](./experiments/grpo/readme.md) | 复现 GSM8K 上的 GRPO，并比较 `importance_sampling` / `ppo` / `cispo` 三个 loss | [阅读](https://datawhalechina.github.io/agentic-rl-lab/experiments/grpo/) |
-| [Vision GRPO](./experiments/vision-grpo/readme.md) | 在 GeoQA 上接入图片输入，解决几何数学题 | [阅读](https://datawhalechina.github.io/agentic-rl-lab/experiments/vision-grpo/) |
-| [PyTrio-Jev](./experiments/pytrio-jev/readme.md) | 一顿麦当劳早餐，人人皆可训练自己的 Jev 决策模型 | [阅读](https://datawhalechina.github.io/agentic-rl-lab/experiments/pytrio-jev/) |
-| [General OPD](./experiments/general-opd/readme.md) | 用 DeepMath-103K 跑通 Student 采样、Teacher 打分与 reverse KL 的最小闭环 | [阅读](https://datawhalechina.github.io/agentic-rl-lab/experiments/general-opd/) |
-| [Medical OPD](./experiments/medical-opd/readme.md) | 从 Medical SFT 出发，用 SAR-OPD 和 IDT-OPD 增强医疗能力，同时保持通用能力 | [阅读](https://datawhalechina.github.io/agentic-rl-lab/experiments/medical-opd/) |
-| [DAPO](./experiments/dapo/readme.md) | 拆解四项核心改进，并记录 Dynamic Sampling 在真实训练中的时间成本 | [阅读](https://datawhalechina.github.io/agentic-rl-lab/experiments/dapo/) |
-| [GSPO](./experiments/gspo/readme.md) | 将重要性比率与裁剪从 token 级提升到 sequence 级 | [阅读](https://datawhalechina.github.io/agentic-rl-lab/experiments/gspo/) |
-| [OPSD](./experiments/opsd/readme.md) | 用固定的 step-0 Teacher 蒸馏 Student 自采样轨迹 | [阅读](https://datawhalechina.github.io/agentic-rl-lab/experiments/opsd/) |
-| [AgentOPSD](./experiments/agentopsd/readme.md) | 用带 Skill 的 Self-Teacher 分配 turn-level credit | [阅读](https://datawhalechina.github.io/agentic-rl-lab/experiments/agentopsd/) |
-| [Search-R1](./experiments/search-r1/readme.md) | 用 Qwen3.5-4B、PyTRIO 和可切换的在线搜索后端复现多轮搜索 RL | [阅读](https://datawhalechina.github.io/agentic-rl-lab/experiments/search-r1/) |
-| [ReTool](./experiments/retool/readme.md) | 用 Qwen3.5-4B、PyTRIO 和本地代码沙箱复现代码交织的 Agentic RL | [阅读](https://datawhalechina.github.io/agentic-rl-lab/experiments/retool/) |
-| [ALFWorld](./experiments/alfworld/readme.md) | 用 12K 长轨迹、真实 TextWorld 环境和 group-relative advantage 训练家务 Agent | [阅读](https://datawhalechina.github.io/agentic-rl-lab/experiments/alfworld/) |
-| [TEMPO](./experiments/tempo/readme.md) | 算法级复现 macro-step 优化与生成式 critic | [阅读](https://datawhalechina.github.io/agentic-rl-lab/experiments/tempo/) |
-| [Spec-o3](https://github.com/datawhalechina/agentic-rl-lab/blob/main/experiments/spec-o3/readme.md) | 用强化学习找星星：通过 SFT + GRPO，让模型边看光谱、边思考、边调用工具 | [阅读](https://datawhalechina.github.io/agentic-rl-lab/experiments/spec-o3/) |
-| [Tournament-GRPO](./experiments/tournament-grpo/readme.md) | 让同题研究报告两两比赛，用淘汰赛胜场构造 GRPO 奖励 | [阅读](https://datawhalechina.github.io/agentic-rl-lab/experiments/tournament-grpo/) |
-
-## 快速启动
-
-&emsp;&emsp;第一次接触本项目，建议先读 [环境配置与基础概念](./experiments/getting-started/readme.md)：注册账号、登录、跑通第一次训练按顺序走一遍，全程不需要 GPU。
-
-&emsp;&emsp;如果是直接 clone 这个仓库：
-
-```bash
-git clone https://github.com/datawhalechina/agentic-rl-lab.git
-cd agentic-rl-lab
-uv sync
+```powershell
+uv sync --python 3.12 --extra cpu
+.\.venv\Scripts\python.exe -m local_rl.train --backend toy --task toy --device cpu --steps 100 --batch-size 4 --group-size 8 --learning-rate 0.01 --output outputs/toy
 ```
 
-&emsp;&emsp;运行 Spec-o3 的数据下载、SFT、GRPO、评测和绘图命令，见 [Spec-o3 快速开始](https://github.com/datawhalechina/agentic-rl-lab/blob/main/experiments/spec-o3/start.md)。
+这是一个从随机参数开始学习十选一答案的微型策略网络，用来观察奖励、优势和梯度；它不是语言模型，也不代表大模型推理能力。依赖安装完成后不需要联网。
 
-&emsp;&emsp;Spec-o3 新增 RL epoch 3 开发集结果：同一批 256 题，Qwen3.5-4B 答对 **175 题（68.36%）**，Qwen3.5-9B 答对 **191 题（74.61%）**，Macro F1 分别为 **70.93% / 75.94%**。完整对照与评测设置见 [Spec-o3 Blog](./experiments/spec-o3/readme.md)。
+## 在 3070 上训练真实语言模型
 
-&emsp;&emsp;运行 ALFWorld、TEMPO 或 AgentOPSD 章节时，需要额外安装 TextWorld 环境依赖：
-
-```bash
-uv sync --extra alfworld
+```powershell
+uv sync --python 3.12 --extra cuda
+.\.venv\Scripts\python.exe -m local_rl.doctor
+.\.venv\Scripts\python.exe -m local_rl.train --steps 20 --group-size 4 --max-new-tokens 96 --output outputs/qwen-grpo
 ```
 
-&emsp;&emsp;如果只想把某个 demo 脚本拎到自己的项目里跑，当前基础依赖为：
+默认是 `Qwen/Qwen2.5-0.5B-Instruct` + LoRA rank 8，单 GPU、逐条生成与训练、总上下文上限 512 tokens。首次需要下载公开模型权重，此后可加 `--offline`。这里的“本地训练”指微调已有模型；并非在 8GB 显卡上从零预训练一个大语言模型。
 
-```bash
-uv add \
-  "datasets>=5.0.0" \
-  "httpx>=0.28.1" \
-  "math-verify>=0.9.0" \
-  "matplotlib>=3.11.0" \
-  "modelscope>=1.38.1" \
-  "numpy>=2.5.1" \
-  "openai>=2.44.0" \
-  "python-dotenv>=1.2.2" \
-  "pytrio==0.2.9" \
-  "swanlab==0.10.4" \
-  "torch>=2.9.1" \
-  "torchvision>=0.27.1" \
-  "tqdm>=4.68.3"
+默认依赖锁定在经过验证的兼容版本，CUDA 轮子使用 12.4。无需安装 PyTRIO 或 CUDA 编译工具链；需要兼容的 NVIDIA 驱动。不要用 `uv sync --extra cpu` 后直接期望 GPU 可用。使用 `uv run` 时也应保留对应的 `--extra cuda` / `--extra cpu`；下面的教程直接调用虚拟环境中的 Python，避免意外改变依赖。
+
+## 已提供的本地能力
+
+| 能力 | 入口/范围 |
+| --- | --- |
+| GRPO / PPO clipped surrogate | `--objective grpo` / `ppo`（无 value critic） |
+| Importance sampling、CISPO | `--objective importance_sampling` / `cispo` |
+| GSPO | `--objective gspo`，序列几何平均比率 |
+| DAPO 教学变体 | `--objective dapo`，非对称裁剪、token mean、有上限的动态采样 |
+| SFT 热身 | `--objective sft`，只对回答 token 计算交叉熵 |
+| 本地 OPD | `--objective opd --teacher-adapter ...`，同一基模上的冻结教师适配器 |
+| 数学题 | 内置算术、可选 GSM8K、显式划分的 JSONL |
+| 两轮工具交互 | `--task calculator` / `retrieval`，离线工具，工具观察不参与策略损失 |
+| 评估、续训、日志 | 固定 held-out 集、优化器/RNG 恢复、JSONL、可选本地图表与 SwanLab 本地看板 |
+
+**本地路径不等同于完整迁移上游所有论文实验。** ALFWorld、TEMPO、视觉模型、大教师、Tournament-GRPO 的原实现仍保留在 `experiments/`，需要原远程环境。请看[迁移表](docs/local/migration.md)中的具体边界。
+
+## 评估训练前后
+
+```powershell
+.\.venv\Scripts\python.exe -m local_rl.evaluate --checkpoint outputs/qwen-grpo/checkpoint-000020 --base --limit 20 --output outputs/base-eval.json
+.\.venv\Scripts\python.exe -m local_rl.evaluate --checkpoint outputs/qwen-grpo/checkpoint-000020 --limit 20 --output outputs/trained-eval.json
+.\.venv\Scripts\python.exe -m local_rl.analyze outputs/qwen-grpo
 ```
 
-&emsp;&emsp;Search-R1 直接调用 DeepSeek 官方 Search API，使用 `httpx`，无需额外安装搜索封装。详见[快速启动指南](./experiments/search-r1/start.md)。
+两次评估使用相同的独立题目和 greedy 解码。不要用训练集奖励上涨来代替泛化评估，也不要预期 20 轮必然提高正确率。组内全对或全错时没有奖励差异，程序会记录零有效组和零策略更新。
 
-&emsp;&emsp;ALFWorld 的 optional extra 对应：
+## 测试
 
-```bash
-uv add --optional alfworld "alfworld==0.4.2" "spacy==3.8.13"
+```powershell
+uv sync --python 3.12 --extra cpu
+.\.venv\Scripts\python.exe -m pytest -q
+.\.venv\Scripts\ruff.exe check local_rl tests
 ```
 
-## 用户故事
+测试使用随机初始化的微型 Qwen2 + 真实 PEFT，验证计算图、token 对齐、适配器保存、冻结教师、工具观察屏蔽和断点续训；不下载模型，不调用 API。切回 GPU 使用前再次 `uv sync --extra cuda`。
 
-&emsp;&emsp;前几天在小红书分享记忆张量（MemTensor）的论文，评论区有位朋友说，他已经入职这家公司，面试时简历里写的就是本仓库的 [AgentOPSD](./experiments/agentopsd/readme.md)！加上好友才发现，刚入门时耐心帮他答疑的 Datawhale 思语，也是我的好朋友。哈哈，世界真小。看来学会 Agentic RL 是真能找到工作啊🤔。目前确实没有其他更好 Agentic RL 教程，Only datawhale can do！
+## 原始远程实验
 
-&emsp;&emsp;顺便安利一下他们开源的原生记忆模型 [MemT-1.0](https://github.com/MemTensor/MemT-1.0)，欢迎[下载体验](https://huggingface.co/collections/MemTensor/memt-1)～
+`remote/pyproject.toml` 与 `remote/uv.lock` 保存原依赖，避免其 CPU Torch 和 PyTRIO 进入本地默认环境。原命令改为从仓库根目录执行：
 
-## 🙏 致谢
+```powershell
+uv run --project remote python experiments/grpo/01-demo-sync.py --swanlab-mode disabled
+```
 
-### 核心贡献者
-
-- [宋志学-项目负责人](https://github.com/KMnO4-zx)（Datawhale 成员）
-
-### 内容贡献者
-
-- [MRLE](https://github.com/mrle0429)（北京交通大学）：[Tournament-GRPO](./experiments/tournament-grpo/readme.md)
-
-&emsp;&emsp;想为这个仓库贡献内容？欢迎！请先阅读 [贡献指南](./CONTRIBUTING.md)：新增算法章节请先开 Issue 提案，修复和文档改进可以直接提 PR。
-
-### 特别感谢
-
-- 感谢 [@Sm1les](https://github.com/Sm1les) 对本项目的帮助与支持
-- 感谢 [PyTRIO 官方团队](https://pytrio.com) 对本项目的支持
-- 感谢 [Kimi 全球大使计划](https://www.kimi.com/zh-cn/lp/kimi-ambassador) 对项目作者的支持
-- 感谢 [OpenAI Codex for Open Source 计划](https://developers.openai.com/community/codex-for-oss) 为项目作者提供的 ChatGPT Pro 订阅支持
-- 感谢 [火山 Hero 计划](https://www.volcengine.com/) 对项目作者的支持
-- 感谢所有为本项目做出贡献的开发者们 ❤️
-
-<div align=center style="margin-top: 30px;">
-  <a href="https://github.com/datawhalechina/agentic-rl-lab/graphs/contributors">
-    <img src="https://contrib.rocks/image?repo=datawhalechina/agentic-rl-lab" />
-  </a>
-</div>
-
-## Star History
-
-<div align="center">
-  <img src="./images/star-history-2026114.png" alt="GitHub Star History" width="700" />
-</div>
-
-## License
-
-See [LICENSE](./LICENSE).
+这条命令**仍然使用远程训练服务**；仅供对照原实验，不属于免费本地学习路径。上游历史说明中的裸 `uv run` / `uv sync` 应加 `--project remote`。

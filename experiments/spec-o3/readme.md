@@ -1,3 +1,5 @@
+> **历史远程实验 / Remote experiment**：本页保留上游内容，脚本可能使用 PyTRIO 或其他在线服务。免费本地学习请使用[本地启动指南](../../docs/local/start.md)；执行本页历史命令时需给 `uv` 添加 `--project remote`。
+
 # 接下来我将复现 10 篇强化学习算法：第 9.4 篇，Spec-o3：我用 GRPO 找天上的星星 🌟
 
 > **快速开始：** 环境准备、数据下载、SFT、RL、评测与绘图的运行命令，见 [start.md](https://github.com/datawhalechina/agentic-rl-lab/blob/main/experiments/spec-o3/start.md)。

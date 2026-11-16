@@ -264,3 +264,9 @@ experiments/general-opd/datasets/
 # Local agent instructions
 /AGENTS.md
 /AGENT.md
+
+# Local training: models, data, optimizer states and reports stay on the learner's machine.
+.venv-local/
+/outputs/
+/models/
+/data/

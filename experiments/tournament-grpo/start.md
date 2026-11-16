@@ -1,3 +1,5 @@
+> **历史远程实验 / Remote experiment**：本页保留上游内容，脚本可能使用 PyTRIO 或其他在线服务。免费本地学习请使用[本地启动指南](../../docs/local/start.md)；执行本页历史命令时需给 `uv` 添加 `--project remote`。
+
 # Tournament-GRPO 快速启动
 
 以下命令都在仓库根目录运行，Python 版本 `>=3.13`。算法讲解见 [readme.md](./readme.md)。

@@ -1,3 +1,11 @@
+# Local edition
+
+For `local_rl/`, use the root Python 3.12 environment, offline CPU tests (`pytest -q`) and `ruff check local_rl tests`. No paid API or online logging dependency belongs in the default path. Preserve upstream attribution and state the difference between educational variants and full paper reproductions. Do not commit model weights, datasets, secrets or run outputs.
+
+The historical guidelines below apply to remote `experiments/` work using the isolated `remote/` environment.
+
+---
+
 # Contributing Guide
 
 <p>

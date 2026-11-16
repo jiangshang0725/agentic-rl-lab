@@ -1,3 +1,5 @@
+> **历史远程实验 / Remote experiment**：本页保留上游内容，脚本可能使用 PyTRIO 或其他在线服务。免费本地学习请使用[本地启动指南](../docs/local/start.md)；执行本页历史命令时需给 `uv` 添加 `--project remote`。
+
 # 实验目录 / Experiments
 
 以下按约定的阅读顺序排列。每篇文章的正文、代码与图片放在同一个目录中，目录名不带编号。

@@ -1,3 +1,5 @@
+> **历史远程实验 / Remote experiment**：本页保留上游内容，脚本可能使用 PyTRIO 或其他在线服务。免费本地学习请使用[本地启动指南](../../docs/local/start.md)；执行本页历史命令时需给 `uv` 添加 `--project remote`。
+
 # 接下来我将复现 10 篇强化学习算法：第 9.2 篇，TEMPO 把长轨迹切成小段，训一个会推理的 Critic
 
 <div align="center">
